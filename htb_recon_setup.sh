@@ -47,5 +47,8 @@ if [ "$scan_flag" -eq 1 ]; then
     tmux send-keys -t $session:1 "/home/kali/scripts/scan_machine.sh $ip $session" C-m
 fi
 
-tmux attach -t $session
+# Call the launch_applications.sh script inside a tmux pane
+tmux send-keys -t $session:1 "/home/kali/scripts/launch_applications.sh $ip $session" C-m
 
+# Attach to the tmux session
+tmux attach -t $session

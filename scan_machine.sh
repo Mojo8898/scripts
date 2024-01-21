@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Check if the correct number of arguments is provided
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 <ip_address> <outfile_name>"
     exit 1
@@ -8,21 +9,40 @@ fi
 ip=$1
 outfile_name=$2
 
+# Function to check if scan is complete (file exists and has more than one line)
+was_scan_completed() {
+    local file=$1
+    [ -s "$file" ] && [ "$(wc -l < "$file")" -gt 1 ]
+}
+
+# Verify connection
+echo 'Waiting on connection to VPN/host...' && until ping -c1 -W 0.5 $ip >/dev/null 2>&1; do :; done
+
 # Directory for nmap results
 mkdir -p nmap/$outfile_name
 
-# Full TCP scan
-sudo nmap -Pn -p- --min-rate=1000 -oN nmap/$outfile_name/allports.nmap -v $ip
-echo '<=================================================================================>'
+# TCP scans
+full_tcp_file="nmap/$outfile_name/full_tcp.nmap"
+targeted_tcp_file="nmap/$outfile_name/targeted_tcp.nmap"
+if ! was_scan_completed "$targeted_tcp_file"; then
+    sudo nmap -Pn -p- --min-rate=1000 -oN "$full_tcp_file" -v $ip
+    echo -e '\n  <===============================================================================================================>  \n'
 
-# Extract open ports for targeted scan
-ports=$(cat nmap/$outfile_name/allports.nmap | grep '^[0-9]' | awk '/open/{print $1}' | cut -d '/' -f 1 | paste -sd,)
-echo "$ports" > nmap/$outfile_name/openports.txt
+    # Extract open ports for targeted scan
+    ports=$(cat "$full_tcp_file" | grep '^[0-9]' | awk '/open/{print $1}' | cut -d '/' -f 1 | paste -sd,)
+    echo "$ports" > "nmap/$outfile_name/open_tcp.txt"
 
-# Targeted TCP scan
-[ -n "$ports" ] && sudo nmap -Pn -sC -sV -oN nmap/$outfile_name/tcp.nmap -p $ports $ip
-echo '<=================================================================================>'
+    # Targeted TCP scan
+    if [ -n "$ports" ]; then
+        sudo nmap -Pn -sC -sV -oN "$targeted_tcp_file" -p $ports $ip
+    else
+        echo "Full TCP was not completed; skipping targeted TCP scan."
+    fi
+    echo -e '\n  <===============================================================================================================>  \n'
+fi
 
 # UDP scan
-sudo nmap -Pn -sU --top-ports=200 -oN nmap/$outfile_name/udp.nmap -v $ip
-
+udp_file="nmap/$outfile_name/udp.nmap"
+if ! was_scan_completed "$udp_file"; then
+    sudo nmap -Pn -sU --top-ports=200 -oN "$udp_file" -v $ip
+fi

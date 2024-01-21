@@ -12,7 +12,7 @@ handle_redirect() {
 
     if [[ "$http_code" == "302" || "$http_code" == "301" ]]; then
         local domain=$(echo "$effective_url" | awk -F/ '{print $3}')
-        echo "$ip $domain" | sudo tee -a /etc/hosts
+        echo "$ip $domain" | sudo tee -a /etc/hosts >/dev/null
         echo "$effective_url"
     else
         echo "$url"
@@ -35,7 +35,7 @@ launch_applications() {
             firefox "$url_to_open" &> /dev/null &
 
             # Launch Burp Suite
-            burpsuite &> /dev/null &
+            # burpsuite &> /dev/null &
         fi
     fi
 }

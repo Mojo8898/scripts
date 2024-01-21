@@ -11,15 +11,15 @@ ip=$2
 vpn=$3
 
 # Create directory and change to it
-mkdir -p /home/kali/htb/machines/$session/nmap && cd /home/kali/htb/machines/$session
+mkdir -p "$HOME/htb/machines/$session/nmap" && cd "$HOME/htb/machines/$session"
 
 # Start tmux session
 tmux new-session -d -s $session
 tmux set-environment -t $session IP "$ip"
 tmux set-environment -t $session SESSION "$session"
-tmux send-keys -t $session:0 "clear" C-m
 
 # Connect to VPN
+tmux send-keys -t $session:0 "clear" C-m
 tmux rename-window -t $session:0 "openvpn"
 tmux send-keys -t $session:0 "sudo openvpn $vpn" C-m
 
@@ -32,7 +32,7 @@ tmux send-keys -t $session:1 "sleep .2" C-m
 
 # Call the scan_machine.sh script
 tmux send-keys -t $session:1 "clear" C-m
-tmux send-keys -t $session:1 "/home/kali/scripts/scan_machine.sh $ip $session" C-m
+tmux send-keys -t $session:1 "$HOME/scripts/scan_machine.sh $ip $session" C-m
 
 # Create a new pane to work in
 tmux split-window -h -t $session:1

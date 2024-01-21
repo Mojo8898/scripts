@@ -9,10 +9,18 @@ fi
 ip=$1
 outfile_name=$2
 
-# Function to check if scan is complete (file exists and has more than one line)
+# Function to check if scan was completed (file exists and has more than one line)
 was_scan_completed() {
     local file=$1
     [ -s "$file" ] && [ "$(wc -l < "$file")" -gt 1 ]
+}
+
+# Function to launch tools based on full TCP scan lines
+launch_tools() {
+    local line=$1
+    if echo "$line" | grep -qE '80\/tcp|443\/tcp'; then
+        "$HOME/scripts/launch_web_tools.sh" "$ip" "$outfile_name"
+    fi
 }
 
 # Verify connection
@@ -25,7 +33,11 @@ mkdir -p nmap/$outfile_name
 full_tcp_file="nmap/$outfile_name/full_tcp.nmap"
 targeted_tcp_file="nmap/$outfile_name/targeted_tcp.nmap"
 if ! was_scan_completed "$targeted_tcp_file"; then
-    sudo nmap -Pn -p- --min-rate=1000 -oN "$full_tcp_file" -v $ip
+    # Check nmap output during execution relevant ports
+    sudo nmap -Pn -p- --min-rate=1000 -oN "$full_tcp_file" -v $ip | while read line; do
+        echo "$line"
+        launch_tools "$line"
+    done
     echo -e '\n  <===============================================================================================================>  \n'
 
     # Extract open ports for targeted scan

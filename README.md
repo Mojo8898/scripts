@@ -16,3 +16,5 @@ Run htb_recon_setup.sh against the box "busqueda" with the given ip address "10.
 ```bash
 ~/scripts/htb/htb_recon_setup.sh 'busqueda' '10.129.228.217' ~/htb/lab_Mojo098.ovpn
 ```
+
+Once executed, you can view your nmap scans on the left pane. Leave the top right pane alone until the nmap scans are finished so that automated scripts can run immediately when ports are discovered during the nmap scan (you can still resize/split any of the panes).

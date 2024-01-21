@@ -32,7 +32,7 @@ tmux send-keys -t $session:1 "sleep .2" C-m
 
 # Call the scan_machine.sh script
 tmux send-keys -t $session:1 "clear" C-m
-tmux send-keys -t $session:1 "$HOME/scripts/scan_machine.sh $ip $session" C-m
+tmux send-keys -t $session:1 "$HOME/scripts/htb/scan_machine.sh $ip $session" C-m
 
 # Create a new pane to work in
 tmux split-window -h -t $session:1

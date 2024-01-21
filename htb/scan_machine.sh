@@ -2,12 +2,12 @@
 
 # Check if the correct number of arguments is provided
 if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <ip_address> <outfile_name>"
+    echo "Usage: $0 <ip_address> <session>"
     exit 1
 fi
 
 ip=$1
-outfile_name=$2
+session=$2
 
 # Function to check if scan was completed (file exists and has more than one line)
 was_scan_completed() {
@@ -15,11 +15,13 @@ was_scan_completed() {
     [ -s "$file" ] && [ "$(wc -l < "$file")" -gt 1 ]
 }
 
-# Function to launch tools based on full TCP scan lines
-launch_tools() {
+# Function to check full TCP scan lines and launch tools based on discovered open ports
+check_line() {
     local line=$1
-    if echo "$line" | grep -qE '80\/tcp|443\/tcp'; then
-        "$HOME/scripts/launch_web_tools.sh" "$ip" "$outfile_name"
+    if echo "$line" | grep -q 'Discovered open port'; then
+        port=$(echo "$line" | awk '{print $4}' | cut -d'/' -f1)
+        protocol=$(echo "$line" | awk '{print $4}' | cut -d'/' -f2)
+        "$HOME/scripts/htb/launch_tools.sh" "$ip" "$session" "$port" "$protocol"
     fi
 }
 
@@ -27,22 +29,23 @@ launch_tools() {
 echo 'Waiting on connection to VPN/host...' && until ping -c1 -W 0.5 $ip >/dev/null 2>&1; do :; done
 
 # Directory for nmap results
-mkdir -p nmap/$outfile_name
+mkdir -p nmap/$session
 
 # TCP scans
-full_tcp_file="nmap/$outfile_name/full_tcp.nmap"
-targeted_tcp_file="nmap/$outfile_name/targeted_tcp.nmap"
+full_tcp_file="nmap/$session/full_tcp.nmap"
+targeted_tcp_file="nmap/$session/targeted_tcp.nmap"
+
 if ! was_scan_completed "$targeted_tcp_file"; then
     # Check nmap output during execution relevant ports
     sudo nmap -Pn -p- --min-rate=1000 -oN "$full_tcp_file" -v $ip | while read line; do
         echo "$line"
-        launch_tools "$line"
+        check_line "$line"
     done
     echo -e '\n  <===============================================================================================================>  \n'
 
     # Extract open ports for targeted scan
     ports=$(cat "$full_tcp_file" | grep '^[0-9]' | awk '/open/{print $1}' | cut -d '/' -f 1 | paste -sd,)
-    echo "$ports" > "nmap/$outfile_name/open_tcp.txt"
+    echo "$ports" > "nmap/$session/open_tcp.txt"
 
     # Targeted TCP scan
     if [ -n "$ports" ]; then
@@ -54,7 +57,8 @@ if ! was_scan_completed "$targeted_tcp_file"; then
 fi
 
 # UDP scan
-udp_file="nmap/$outfile_name/udp.nmap"
+udp_file="nmap/$session/udp.nmap"
+
 if ! was_scan_completed "$udp_file"; then
     sudo nmap -Pn -sU --top-ports=200 -oN "$udp_file" -v $ip
 fi

@@ -29,18 +29,16 @@ handle_redirect() {
     echo "$effective_url"
 }
 
+# echo "Debug: $port/$protocol" | tee -a "$HOME/htb/machines/$session/commands.txt" >/dev/null
+
 # Main logic to handle ports and protocols
 if [ "$protocol" == "tcp" ]; then
     if [[ "$port" == "80" || "$port" == "443" ]]; then
         url=$(handle_redirect)
         if [ -n "$url" ]; then
-            # Launch GUI tools first
-            firefox "$url" &> /dev/null &
-            burpsuite &> /dev/null &
-
-            # Launch command line tools
-            mkdir -p "$HOME/htb/machines/$session/ffuf"
-            tmux send-keys -t $session:1.1 "ffuf -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u $url/FUZZ -o ffuf/dirs.json -ic" C-m
+            # firefox "$url" &> /dev/null &
+            # burpsuite &> /dev/null &
+            echo 'http!' | tee -a "$HOME/htb/machines/$session/commands.txt" >/dev/null
         fi
     fi
 else

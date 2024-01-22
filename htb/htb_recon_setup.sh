@@ -10,8 +10,10 @@ session=$1
 ip=$2
 vpn=$3
 
-# Create directory and change to it
-mkdir -p "$HOME/htb/machines/$session/nmap" && cd "$HOME/htb/machines/$session"
+# Create working environment
+mkdir -p "$HOME/htb/machines/$session/nmap"
+touch "$HOME/htb/machines/$session/commands.txt"
+cd "$HOME/htb/machines/$session"
 
 # Start tmux session
 tmux new-session -d -s $session
@@ -31,11 +33,11 @@ tmux send-keys -t $session:1 "sleep .2" C-m
 tmux send-keys -t $session:1 "clear" C-m
 tmux send-keys -t $session:1 "$HOME/scripts/htb/scan_machine.sh $ip $session" C-m
 
-# Create a new pane to run automated scripts
+# Create a new pane to dynamically view recommended commands based on nmap output
 tmux split-window -h -t $session:1
 tmux send-keys -t $session:1.1 "sleep .2" C-m
 tmux send-keys -t $session:1.1 "clear" C-m
-tmux send-keys -t $session:1.1 "echo 'Leave this window alone for automated scripts to run in based on nmap output'" C-m
+tmux send-keys -t $session:1.1 "less +F commands.txt" C-m
 
 # Create a new pane to perform manual commands
 tmux split-window -v -t $session:1.1

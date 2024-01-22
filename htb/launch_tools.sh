@@ -36,9 +36,10 @@ if [ "$protocol" == "tcp" ]; then
     if [[ "$port" == "80" || "$port" == "443" ]]; then
         url=$(handle_redirect)
         if [ -n "$url" ]; then
+            :
             # firefox "$url" &> /dev/null &
             # burpsuite &> /dev/null &
-            echo 'http!' | tee -a "$HOME/htb/machines/$session/commands.txt" >/dev/null
+            # echo 'http!' | tee -a "$HOME/htb/machines/$session/commands.txt" >/dev/null
         fi
     fi
 else

@@ -26,9 +26,19 @@ check_discovered_tcp_line() {
 }
 
 # Function to check scan lines (both TCP and UDP) and launch tools based on open ports
-check_line() {
+check_targeted_tcp_line() {
     local line=$1
-    if echo "$line" | grep -qE '^[0-9]+/(tcp|udp)'; then
+    if echo "$line" | grep -qE '^[0-9]+/tcp'; then
+        local port=$(echo "$line" | awk '{print $1}' | cut -d'/' -f1)
+        local protocol=$(echo "$line" | awk '{print $1}' | cut -d'/' -f2)
+        "$HOME/scripts/htb/launch_tools.sh" "$ip" "$session" "$port" "$protocol"
+    fi
+}
+
+# Function to check UDP scan lines and launch tools based on open ports
+check_udp_line() {
+    local line=$1
+    if echo "$line" | grep -qE '^[0-9]+/udp'; then
         local port=$(echo "$line" | awk '{print $1}' | cut -d'/' -f1)
         local protocol=$(echo "$line" | awk '{print $1}' | cut -d'/' -f2)
         "$HOME/scripts/htb/launch_tools.sh" "$ip" "$session" "$port" "$protocol"
@@ -43,7 +53,7 @@ full_tcp_file="nmap/full_tcp.nmap"
 targeted_tcp_file="nmap/targeted_tcp.nmap"
 
 if ! was_scan_completed "$targeted_tcp_file"; then
-    # Check nmap output during execution relevant ports
+    # Check discovered ports during nmap scan
     sudo nmap -Pn -p- --min-rate=1000 -oN "$full_tcp_file" -v $ip | while read line; do
         echo "$line"
         check_discovered_tcp_line "$line"
@@ -58,7 +68,7 @@ if ! was_scan_completed "$targeted_tcp_file"; then
     if [ -n "$ports" ]; then
         sudo nmap -Pn -sC -sV -oN "$targeted_tcp_file" -p $ports $ip | while read line; do
             echo "$line"
-            check_line "$line"
+            check_targeted_tcp_line "$line"
         done
     else
         echo "Full TCP was not completed; skipping targeted TCP scan."
@@ -66,7 +76,7 @@ if ! was_scan_completed "$targeted_tcp_file"; then
 else
     while read line; do
         echo "$line"
-        check_line "$line"
+        check_targeted_tcp_line "$line"
     done < "$targeted_tcp_file"
 fi
 echo -e '\n  <===============================================================================================================>  \n'
@@ -77,11 +87,11 @@ udp_file="nmap/udp.nmap"
 if ! was_scan_completed "$udp_file"; then
     sudo nmap -Pn -sU --top-ports=200 -oN "$udp_file" -v $ip | while read line; do
         echo "$line"
-        check_line "$line"
+        check_udp_line "$line"
     done
 else
     while read line; do
         echo "$line"
-        check_line "$line"
+        check_udp_line "$line"
     done < "$udp_file"
 fi

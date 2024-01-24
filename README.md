@@ -23,7 +23,7 @@ This will automatically launch a quick TCP scan with nmap, looking only for open
 
 ### scan_host_list.sh
 
-Run scan_host_list.sh against the the host list `external_hosts.exe`. This file contains a list of target ip addresses separated by newlines
+Run scan_host_list.sh against the the host list `external_hosts.txt`. This file contains a list of target ip addresses separated by newlines
 
 ```bash
 ~/scripts/scan_host_list.sh external_hosts.txt

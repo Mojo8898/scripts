@@ -1,12 +1,13 @@
 #!/bin/bash
 
 # Check if the correct number of arguments is provided
-if [ "$#" -ne 1 ]; then
-    echo "Usage: $0 <session>"
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <session> <vpn_file>"
     exit 1
 fi
 
 session=$1
+vpn=$2
 
 # Create working environment
 mkdir -p "$HOME/oscp/labs/$session"
@@ -19,6 +20,7 @@ tmux set-environment -t $session SESSION "$session"
 # Connect to VPN
 tmux send-keys -t $session:0 "clear" C-m
 tmux rename-window -t $session:0 "openvpn"
+tmux send-keys -t $session:0 "sudo openvpn $vpn" C-m
 
 # Create new window to work in
 tmux new-window -t $session

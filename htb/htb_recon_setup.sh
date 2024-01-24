@@ -24,7 +24,7 @@ tmux send-keys -t $session:0 "clear" C-m
 tmux rename-window -t $session:0 "openvpn"
 tmux send-keys -t $session:0 "sudo openvpn $vpn" C-m
 
-# Create new window to work in (delay is added to ensure zsh is properly initialized)
+# Create new window to work in
 tmux new-window -t $session -n $ip
 tmux send-keys -t $session:1 "clear" C-m
 tmux send-keys -t $session:1 "sleep .2" C-m

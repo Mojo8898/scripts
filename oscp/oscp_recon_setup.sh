@@ -20,7 +20,7 @@ tmux set-environment -t $session SESSION "$session"
 tmux send-keys -t $session:0 "clear" C-m
 tmux rename-window -t $session:0 "openvpn"
 
-# Create new window to work in (delay is added to ensure zsh is properly initialized)
+# Create new window to work in
 tmux new-window -t $session
 
 # Create a new pane to dynamically view recommended commands based on nmap output

@@ -2,12 +2,11 @@
 
 # Check if the correct number of arguments is provided
 if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <ip_address> <session>"
+    echo "Usage: $0 <ip_address>"
     exit 1
 fi
 
 ip=$1
-session=$2
 
 # Function to check if scan was completed (file exists and has more than one line)
 was_scan_completed() {
@@ -23,7 +22,6 @@ full_tcp_file="nmap/full_tcp.nmap"
 targeted_tcp_file="nmap/targeted_tcp.nmap"
 
 if ! was_scan_completed "$targeted_tcp_file"; then
-    # Check discovered ports during nmap scan
     sudo nmap -Pn -p- --min-rate=1000 -oN "$full_tcp_file" -v $ip
     echo -e '\n  <===============================================================================================================>  \n'
 

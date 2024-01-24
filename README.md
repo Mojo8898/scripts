@@ -29,7 +29,7 @@ Run scan_host_list.sh against the the host list `external_hosts.txt`. This file 
 ~/scripts/scan_host_list.sh external_hosts.txt
 ```
 
-This will automatically loop through hosts in `external_hosts.txt`, creating directories for each of them and executing `scan_machine.sh`
+This will automatically loop through hosts in `external_hosts.txt`, creating directories and executing `scan_machine.sh` for each of them
 
 ### ps_cradle_gen.sh
 

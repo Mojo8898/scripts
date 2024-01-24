@@ -1,6 +1,6 @@
 # scripts
 
-These are some of the scripts that I use regularly
+This repository contains a collection of scripts that I regularly use for network scanning, reconnaissance, and other offensive security-related tasks. These scripts are designed to automate various processes, making it easier to perform complex tasks with simple commands.
 
 ## Install
 

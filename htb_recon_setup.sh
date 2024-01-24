@@ -9,9 +9,20 @@ fi
 session=$1
 ip=$2
 vpn=$3
+scan_script="$HOME/scripts/scan_machine.sh"
+
+# Check if scan script exists
+if [ ! -f "$scan_script" ]; then
+    echo "Scan script not found at $scan_script"
+    exit 1
+fi
 
 # Create working environment
 mkdir -p "$HOME/htb/machines/$session/nmap"
+if [ $? -ne 0 ]; then
+    echo "Failed to create directory for session $session"
+    exit 1
+fi
 cd "$HOME/htb/machines/$session"
 
 # Start tmux session
@@ -31,7 +42,7 @@ tmux send-keys -t $session:1 "sleep .2" C-m
 tmux send-keys -t $session:1 "clear" C-m
 
 # Call the scan_machine.sh script
-tmux send-keys -t $session:1 "$HOME/scripts/scan_machine.sh $ip $session" C-m
+tmux send-keys -t $session:1 "$scan_script $ip" C-m
 
 # Create a new pane to dynamically view recommended commands based on nmap output
 tmux split-window -h -t $session:1

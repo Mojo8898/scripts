@@ -11,6 +11,10 @@ vpn=$2
 
 # Create working environment
 mkdir -p "$HOME/oscp/labs/$session"
+if [ $? -ne 0 ]; then
+    echo "Failed to create directory for session $session"
+    exit 1
+fi
 cd "$HOME/oscp/labs/$session"
 
 # Start tmux session

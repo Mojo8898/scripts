@@ -2,7 +2,7 @@
 
 # Check if the correct number of arguments is provided
 if [ "$#" -ne 3 ]; then
-    echo "Usage: $0 <machine_name> <ip_address> <vpn_file>"
+    echo "Usage: $0 <session> <host_list>"
     exit 1
 fi
 
@@ -12,7 +12,7 @@ vpn=$3
 
 # Create working environment
 mkdir -p "$HOME/htb/machines/$session/nmap"
-# touch "$HOME/htb/machines/$session/commands.txt"
+touch "$HOME/htb/machines/$session/commands.txt"
 cd "$HOME/htb/machines/$session"
 
 # Start tmux session
@@ -35,12 +35,12 @@ tmux send-keys -t $session:1 "$HOME/scripts/htb/scan_machine.sh $ip $session" C-
 
 # Create a new pane to dynamically view recommended commands based on nmap output
 tmux split-window -h -t $session:1
-# tmux send-keys -t $session:1.1 "sleep .2" C-m
-# tmux send-keys -t $session:1.1 "clear" C-m
-# tmux send-keys -t $session:1.1 "less +F commands.txt" C-m
+tmux send-keys -t $session:1.1 "sleep .2" C-m
+tmux send-keys -t $session:1.1 "clear" C-m
+tmux send-keys -t $session:1.1 "less +F commands.txt" C-m
 
 # Create a new pane to perform manual commands
-# tmux split-window -v -t $session:1.1
+tmux split-window -v -t $session:1.1
 
 # Attach to the tmux session
 tmux attach -t $session

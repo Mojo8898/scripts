@@ -16,4 +16,3 @@ new_ip=$2
 
 # Update the IP environment variable in the tmux session
 tmux set-environment -t $session_name IP "$new_ip"
-

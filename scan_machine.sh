@@ -23,7 +23,7 @@ targeted_tcp_file="nmap/targeted_tcp.nmap"
 
 if ! was_scan_completed "$targeted_tcp_file"; then
     sudo nmap -Pn -p- --min-rate=1000 -oN "$full_tcp_file" -v $ip
-    echo -e '\n  <===============================================================================================================>  \n'
+    echo -e '\n  <===============================================================================================================>\n'
 
     # Extract open ports for targeted scan
     ports=$(cat "$full_tcp_file" | grep '^[0-9]' | awk '/open/{print $1}' | cut -d '/' -f 1 | paste -sd,)
@@ -38,7 +38,7 @@ if ! was_scan_completed "$targeted_tcp_file"; then
 else
     cat $targeted_tcp_file
 fi
-echo -e '\n  <===============================================================================================================>  \n'
+echo -e '\n  <===============================================================================================================>\n'
 
 # UDP scan
 udp_file="nmap/udp.nmap"

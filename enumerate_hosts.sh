@@ -23,7 +23,7 @@ while IFS= read -r host; do
     fi
 
     # Create a directory for the host if it doesn't exist
-    mkdir -p "$host"
+    mkdir -p "$host/nmap"
     if [ $? -ne 0 ]; then
         echo "Failed to create directory for host $host"
         continue
@@ -34,5 +34,7 @@ while IFS= read -r host; do
     bash "$scan_script" "$host"
     cd ..
 
-    echo -e '\n<== SCAN COMPLETE FOR HOST $host ==>\n'
+    echo -e '\n  <===============================================================================================================>\n'
+    echo "                                       SCAN COMPLETE FOR HOST $host"
+    echo -e '\n  <===============================================================================================================>\n'
 done < "$hosts_file"

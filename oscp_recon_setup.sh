@@ -19,7 +19,6 @@ cd "$HOME/oscp/labs/$session"
 
 # Start tmux session
 tmux new-session -d -s $session
-tmux set-environment -t $session SESSION "$session"
 
 # Connect to VPN
 tmux send-keys -t $session:0 "clear" C-m

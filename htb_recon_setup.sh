@@ -28,7 +28,6 @@ cd "$HOME/htb/machines/$session"
 # Start tmux session
 tmux new-session -d -s $session
 tmux set-environment -t $session IP "$ip"
-tmux set-environment -t $session SESSION "$session"
 
 # Connect to VPN
 tmux send-keys -t $session:0 "clear" C-m

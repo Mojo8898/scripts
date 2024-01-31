@@ -17,6 +17,13 @@ was_scan_completed() {
 # Verify connection
 echo 'Waiting on connection to VPN/host...' && until ping -c1 -W 0.5 $ip >/dev/null 2>&1; do :; done
 
+# Create nmap directory
+mkdir -p "nmap"
+if [ $? -ne 0 ]; then
+    echo "Failed to create nmap directory"
+    exit 1
+fi
+
 # TCP scans
 full_tcp_file="nmap/full_tcp.nmap"
 targeted_tcp_file="nmap/targeted_tcp.nmap"

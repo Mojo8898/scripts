@@ -18,7 +18,7 @@ if [ ! -f "$scan_script" ]; then
 fi
 
 # Create working environment
-mkdir -p "$HOME/htb/machines/$session/nmap"
+mkdir -p "$HOME/htb/machines/$session"
 if [ $? -ne 0 ]; then
     echo "Failed to create directory for session $session"
     exit 1

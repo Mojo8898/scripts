@@ -31,15 +31,15 @@ Run scan_host_list.sh against the the host list `external_hosts.txt`. This file 
 
 This will automatically loop through hosts in `external_hosts.txt`, creating directories and executing `scan_machine.sh` for each of them
 
-### ps_cradle_gen.sh
+### cradle_gen.sh
 
-Run ps_cradle_gen.sh with the `-l` option to set up a listener on port `9001` and give it our ip address of `10.10.14.82`
+Run cradle_gen.sh with the `-l` option to set up a listener on port `9001` and give it our ip address of `10.10.14.82`
 
 ```bash
-~/scripts/ps_cradle_gen.sh 10.10.14.82 9001
+~/scripts/cradle_gen.sh 10.10.14.82 9001
 ```
 
-This will generate a list of cradles you can utilize to pop shells in Windows environments
+This will generate a list of cradles you can utilize to pop shells in Linux and/or Windows environments
 
 You can also include the `-l` option to start a listener
 

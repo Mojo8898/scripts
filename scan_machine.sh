@@ -15,7 +15,7 @@ was_scan_completed() {
 }
 
 # Verify connection
-echo 'Waiting on connection to VPN/host...' && until ping -c1 -W 0.5 $ip >/dev/null 2>&1; do :; done
+# echo 'Waiting on connection to VPN/host...' && until ping -c1 -W 0.5 $ip >/dev/null 2>&1; do :; done
 
 # Create nmap directory
 mkdir -p "nmap"

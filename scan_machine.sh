@@ -14,9 +14,6 @@ was_scan_completed() {
     [ -s "$file" ] && [ "$(wc -l < "$file")" -gt 1 ]
 }
 
-# Verify connection
-echo 'Waiting on connection to VPN/host...' && until ping -c1 -W 0.5 $ip >/dev/null 2>&1; do :; done
-
 # Create nmap directory
 mkdir -p "nmap"
 if [ $? -ne 0 ]; then
@@ -29,7 +26,7 @@ full_tcp_file="nmap/full_tcp.nmap"
 targeted_tcp_file="nmap/targeted_tcp.nmap"
 
 if ! was_scan_completed "$targeted_tcp_file"; then
-    sudo nmap -Pn -p- --min-rate 1000 -oN "$full_tcp_file" -v $ip
+    sudo /usr/bin/nmap -Pn -p- --min-rate 1000 -oN "$full_tcp_file" -v $ip
     echo -e '\n  <===============================================================================================================>\n'
 
     # Extract open ports for targeted scan
@@ -38,7 +35,7 @@ if ! was_scan_completed "$targeted_tcp_file"; then
 
     # Targeted TCP scan
     if [ -n "$ports" ]; then
-        sudo nmap -Pn -sC -sV -oN "$targeted_tcp_file" -p $ports $ip
+        sudo /usr/bin/nmap -Pn -sC -sV -oN "$targeted_tcp_file" -p $ports $ip
     else
         echo "Full TCP was not completed; skipping targeted TCP scan."
     fi
@@ -51,7 +48,7 @@ echo -e '\n  <==================================================================
 udp_file="nmap/udp.nmap"
 
 if ! was_scan_completed "$udp_file"; then
-    sudo nmap -Pn -sU --top-ports 200 -oN "$udp_file" -v $ip
+    sudo /usr/bin/nmap -Pn -sU --top-ports 200 -oN "$udp_file" -v $ip
 else
     cat $udp_file
 fi

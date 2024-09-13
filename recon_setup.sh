@@ -1,21 +1,22 @@
 #!/bin/bash
 
 # Check if the correct number of arguments is provided
-if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <session> <vpn_file>"
+if [ "$#" -ne 3 ]; then
+    echo "Usage: $0 <session> <vpn_file> <path>"
     exit 1
 fi
 
 session=$1
 vpn=$2
+path=$3
 
 # Create working environment
-mkdir -p "$HOME/oscp/labs/$session"
+mkdir -p "$path/$session"
 if [ $? -ne 0 ]; then
     echo "Failed to create directory for session $session"
     exit 1
 fi
-cd "$HOME/oscp/labs/$session"
+cd "$path/$session"
 
 # Start tmux session
 tmux new-session -d -s $session

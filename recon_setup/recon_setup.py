@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-# To-do: Fix bug where if initial cred username is exact same as discovered username it gets stuck.
-
 import argparse
 import ctypes
 import libtmux

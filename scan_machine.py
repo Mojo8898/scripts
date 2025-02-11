@@ -87,6 +87,7 @@ def main():
         run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-sCV", "--min-rate", "1000", "-v", ip])
         print(f"\n  {color_codes['SCAN_COMPLETE']}<============================ Quick TCP scan complete. Launching full TCP scan... =============================>{color_codes['NC']}\n")
 
+        # Full TCP scan
         print("Running full TCP scan (all ports)...")
         run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-p-", "--min-rate", "1000", "-oN", full_tcp_file, ip])
         print(f"\n  {color_codes['SCAN_COMPLETE']}<=========================== Full TCP scan complete. Launching targeted TCP scan... ===========================>{color_codes['NC']}\n")

@@ -32,7 +32,12 @@ def handle_task(context, port):
 def run_task(context, command):
     target_pane = prepare_task_pane(context)
     if target_pane:
-        target_pane.send_keys(f"sleep {context.current_task_pane * 2}; {command}")
+        if "nxc" in command:
+            target_pane.send_keys(f"sleep 5; {command}") # Prevents NetBIOSTimeout exception
+        else:
+            target_pane.send_keys(f"sleep {context.current_task_pane}; {command}")
+    else:
+        write_log(context.log_file, f"Failed to create pane for task: {command}")
 
 def stage_task(context, command):
     target_pane = prepare_task_pane(context)
@@ -43,7 +48,7 @@ def prepare_task_pane(context):
     if (context.current_task_window is None or 
         context.current_task_pane > 5):
         # Create a new task window
-        window_name = f"tasks-{context.task_window_count}"
+        window_name = f"tasks{context.task_window_count}"
         new_window = context.session.new_window(
             window_name=window_name, 
             attach=False
@@ -77,7 +82,8 @@ def prepare_task_pane(context):
 def proto_tasks(context):
     if context.creds_exist():
         user, passwd = context.get_initial_cred()
-        run_task(context, f"nxc ftp {context.ip} -u {user} -p '{passwd}'")
+        if passwd:
+            run_task(context, f"nxc ftp {context.ip} -u {user} -p '{passwd}'")
 
 @port_registry.register_port_handler(53)
 def dns_tasks(context):
@@ -90,7 +96,7 @@ def http_tasks(context):
         run_task(context, f"firefox 'http://{target}' &; disown; ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://{target} -H 'Host: FUZZ.{target}' -ac; ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -u http://{target}/FUZZ")
     else:
         target = context.ip
-        run_task(context, f"firefox 'http://{target}' &; ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -u http://{target}/FUZZ")
+        run_task(context, f"firefox 'http://{target}' &; disown; ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -u http://{target}/FUZZ")
     run_task(context, f"wpscan --url http://{target} --detection-mode aggressive -e ap,u; wpscan --url http://{target} --detection-mode aggressive -e ap,u --plugins-detection aggressive -o wpscan_long.out")
 
 @port_registry.register_port_handler(88)
@@ -126,9 +132,9 @@ def proto_tasks(context):
 def smb_tasks(context):
     if context.creds_exist():
         user, passwd = context.get_initial_cred()
-        run_task(context, f"nxc smb {context.ip} -u {user} -p '{passwd}' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out --smb-timeout 10")
+        run_task(context, f"nxc smb {context.ip} -u {user} -p '{passwd}' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out; cat smb.out | grep TypeUser | cut -d '\\' -f 2 | cut -d ' ' -f 1 > users.txt; cat users.txt")
     else:
-        run_task(context, f"nxc smb {context.ip} -u '' -p '' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/null_smb.out; nxc smb {context.ip} -u 'a' -p '' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/guest_smb.out")
+        run_task(context, f"nxc smb {context.ip} -u '' -p '' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out; nxc smb {context.ip} -u 'a' -p '' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out; cat smb.out | grep TypeUser | cut -d '\\' -f 2 | cut -d ' ' -f 1 > users.txt; cat users.txt")
     shares, method = enumerate_smb_shares(context)
     if shares:
         for share in shares:

@@ -33,7 +33,7 @@ def verify_connection(ip):
         except subprocess.CalledProcessError:
             reachable = False
         sleep(0.5)
-    sleep(0.5)
+    sleep(1)
 
 def main():
     # Define home directory
@@ -46,8 +46,8 @@ def main():
     session_group = parser.add_argument_group("Session Arguments", "Arguments related to session configuration")
     session_group.add_argument("session_name", type=str, help="Name of the tmux session to be created")
     session_group.add_argument("vpn_path", type=str, help="Path of your VPN file")
-    session_group.add_argument("-s", "--session_path", type=str, default=os.path.join(home_dir, "htb", "machines"), help="Path to where the session will be created (defaults to ~/htb/machines)")
-    session_group.add_argument("-S", "--scan_script_path", type=str, default=os.path.join(home_dir, "scripts", "scan_machine.py"), help="Path to nmap wrapper script (defaults to ~/scripts/scan_machine.py)")
+    session_group.add_argument("-s", "--session_path", type=str, default=os.path.join(home_dir, "htb", "machines"), help="Path to where the session will be created (default: ~/htb/machines)")
+    session_group.add_argument("-S", "--scan_script_path", type=str, default=os.path.join(home_dir, "scripts", "scan_machine.py"), help="Path to nmap wrapper script (default: ~/scripts/scan_machine.py)")
     session_group.add_argument("-i", "--ip", type=str, help="IP address of the target machine")
 
     # Initialize automation arguments

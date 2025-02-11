@@ -17,7 +17,7 @@ def main():
     # Initialize arguments
     parser = argparse.ArgumentParser(description="Execute scan_machine.py on a list of targets from a file.")
     parser.add_argument("targets_file", type=str, help="File containing the list of targets to scan separated by newlines")
-    parser.add_argument("-S", "--scan_script_path", type=str, default=os.path.join(home_dir, "scripts", "scan_machine.py"), help="Path to nmap wrapper script (defaults to ~/scripts/scan_machine.py)")
+    parser.add_argument("-S", "--scan_script_path", type=str, default=os.path.join(home_dir, "scripts", "scan_machine.py"), help="Path to nmap wrapper script (default: ~/scripts/scan_machine.py)")
     args = parser.parse_args()
 
     # Define local variables

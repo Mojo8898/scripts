@@ -11,10 +11,16 @@ Here are a collection of scripts I use regularly for offensive security-related 
 sudo apt install python3-impacket python3-libtmux python3-requests python3-urllib3 python3-watchdog
 
 # Clone repo
-git clone https://github.com/Mojo8898/scripts.git '~/scripts'
+git clone https://github.com/Mojo8898/scripts.git ~/scripts
 
 # Make nmap wrapper script executable
 chmod +x ~/scripts/scan_machine.py
+```
+
+Some automated scripts including the built-in nmap mapper require sudo to run properly. Add the following line to the bottom of your /etc/sudoers file (using `visudo`) to prevent password prompts.
+
+```
+kali    ALL=(ALL) NOPASSWD: ALL
 ```
 
 ## Example Usage

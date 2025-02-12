@@ -1,6 +1,8 @@
 # scripts
 
-This repository contains a collection of scripts I use regularly for offensive security-related tasks.
+Here are a collection of scripts I use regularly for offensive security-related tasks.
+
+![](img/recon_setup_demo.gif)
 
 ## Install
 

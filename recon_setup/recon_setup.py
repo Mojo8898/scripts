@@ -10,6 +10,7 @@ import sys
 from time import sleep
 
 from utils.context import Context
+from utils.htb_cli import spawn_machine
 from utils.tmux import initialize_pane
 from watchers.nmap_watcher import watch_nmap
 
@@ -50,12 +51,20 @@ def main():
     session_group.add_argument("-S", "--scan_script_path", type=str, default=os.path.join(home_dir, "scripts", "scan_machine.py"), help="Path to nmap wrapper script (default: ~/scripts/scan_machine.py)")
     session_group.add_argument("-i", "--ip", type=str, help="IP address of the target machine")
 
+    # Initialize HTB CLI arguments
+    htb_cli_group = parser.add_argument_group("HTB CLI Arguments", "Arguments related to HTB CLI functionality")
+    htb_cli_group.add_argument("--spawn", action="store_true", help="Spawn the target machine using the HTB CLI instead of providing an IP (requires htb-cli)")
+    htb_cli_group.add_argument("-m", "--machine", type=str, help="Name of the target machine to spawn")
+    htb_cli_group.add_argument("-n", "--new_release", action="store_true", help="Wait for the scheduled release time (7pm UTC) and spawn automatically")
+
     # Initialize automation arguments
     automation_group = parser.add_argument_group("Automation Arguments", "Arguments related to automated tasking")
     automation_group.add_argument("-a", "--automate", action="store_true", help="Optional flag to enable automated tasks on the fly from nmap scan results")
     automation_group.add_argument("-u", "--username", type=str, help="Username to supply automated tasks (AD only)")
     automation_group.add_argument("-p", "--password", type=str, help="Password to supply automated tasks (AD only)")
     automation_group.add_argument("-d", "--debug", action="store_true", help="Enable debug mode for automation")
+
+    # Initialize parser
     args = parser.parse_args()
 
     # Define local variables
@@ -64,10 +73,22 @@ def main():
     session_path = args.session_path
     scan_script_path = args.scan_script_path
     ip = args.ip
+    spawn = args.spawn
+    machine = args.machine
+    new_release = args.new_release
     automate = args.automate
     user = args.username
     passwd = args.password
     debug = args.debug
+
+    # Initialize HTB machine if relevant arguments are included
+    if spawn:
+        ip = spawn_machine(machine, new_release)
+        if not ip:
+            print("Error: HTB CLI failed to provide an IP")
+            sys.exit(1)
+    else:
+        ip = args.ip
 
     # Define file paths
     scan_script_file = os.path.abspath(scan_script_path)
@@ -123,7 +144,6 @@ def main():
         initialize_pane(base_pane)
         session.select_window(1)
         base_pane.select()
-        base_pane.resize(width=117) # Likely specific to my setup, adjust as needed
 
         # Initialize automation if argument is provided
         if automate:
@@ -162,8 +182,8 @@ def main():
         else:
             nmap_pane.send_keys(f"{scan_script_file} {ip}")
         os._exit(0)
-
-    os.execvp("tmux", ["tmux", "attach-session", "-t", session_name])
+    else:
+        os.execvp("tmux", ["tmux", "attach-session", "-t", session_name])
 
 if __name__ == "__main__":
     main()

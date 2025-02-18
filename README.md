@@ -8,7 +8,7 @@ Here are a collection of scripts I use regularly for offensive security-related 
 
 ```bash
 # Install dependencies (kali only)
-sudo apt install python3-impacket python3-libtmux python3-requests python3-urllib3 python3-watchdog
+sudo apt install python3-impacket python3-libtmux python3-requests python3-rich python3-urllib3 python3-watchdog
 
 # Clone repo
 git clone https://github.com/Mojo8898/scripts.git ~/scripts

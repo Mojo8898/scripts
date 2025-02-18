@@ -91,8 +91,12 @@ def dns_tasks(context):
 
 @port_registry.register_port_handler(80)
 def http_tasks(context):
-    if context.vhost:
-        target = context.vhost or context.domain
+    if context.vhost or context.domain:
+        if context.vhost == context.domain:
+            target = context.domain
+            run_task(context, f"firefox 'http://{target}' &; disown; ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://{target} -H 'Host: FUZZ.{target}' -ac; ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -u http://{target}/FUZZ")
+        else:
+            target = context.vhost
         run_task(context, f"firefox 'http://{target}' &; disown; ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://{target} -H 'Host: FUZZ.{target}' -ac; ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -u http://{target}/FUZZ")
     else:
         target = context.ip
@@ -132,9 +136,9 @@ def proto_tasks(context):
 def smb_tasks(context):
     if context.creds_exist():
         user, passwd = context.get_initial_cred()
-        run_task(context, f"nxc smb {context.ip} -u {user} -p '{passwd}' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out; cat smb.out | grep TypeUser | cut -d '\\' -f 2 | cut -d ' ' -f 1 > users.txt; cat users.txt")
+        run_task(context, f"nxc smb {context.ip} -u {user} -p '{passwd}' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out; cat smb.out | grep TypeUser | cut -d '\\' -f 2 | cut -d ' ' -f 1 > users.txt; echo; cat users.txt")
     else:
-        run_task(context, f"nxc smb {context.ip} -u '' -p '' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out; nxc smb {context.ip} -u 'a' -p '' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out; cat smb.out | grep TypeUser | cut -d '\\' -f 2 | cut -d ' ' -f 1 > users.txt; cat users.txt")
+        run_task(context, f"nxc smb {context.ip} -u '' -p '' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out; nxc smb {context.ip} -u 'a' -p '' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out; cat smb.out | grep TypeUser | cut -d '\\' -f 2 | cut -d ' ' -f 1 > users.txt; echo; cat users.txt")
     shares, method = enumerate_smb_shares(context)
     if shares:
         for share in shares:

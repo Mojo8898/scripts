@@ -91,7 +91,6 @@ def dns_tasks(context):
 
 @port_registry.register_port_handler(80)
 def http_tasks(context):
-    write_log(context.log_file, f"vhost: {context.vhost}, domain: {context.domain}, ip: {context.ip}")
     target = context.vhost or context.domain
     if target:
         run_task(context, f"firefox 'http://{target}' &; disown; ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://{target} -H 'Host: FUZZ.{target}' -ac; ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -u http://{target}/FUZZ")

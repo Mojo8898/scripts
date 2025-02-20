@@ -5,19 +5,26 @@ import os
 import subprocess
 import sys
 
-color_codes = {
-    "TARGET_COMPLETE": "\033[0;36m", # Cyan
-    "NC": "\033[0m"
-}
+def print_separator(message=None):
+    try:
+        term_width = os.get_terminal_size().columns
+    except OSError:
+        term_width = 80
+    if message:
+        odd = ""
+        if (term_width - len(message)) % 2 == 1:
+            odd = "="
+        equal_space = (term_width - len(message) - 10) // 2
+        separator = "  <" + "=" * equal_space + " " + message + " " + "=" * equal_space + odd + ">"
+    else:
+        separator = "  <" + "=" * (term_width - 8) + ">"
+    print(f"\n \033[0;36m{separator}\033[0m\n")
 
 def main():
-    # Define home directory
-    home_dir = os.path.expanduser("~")
-
     # Initialize arguments
     parser = argparse.ArgumentParser(description="Execute scan_machine.py on a list of targets from a file.")
     parser.add_argument("targets_file", type=str, help="File containing the list of targets to scan separated by newlines")
-    parser.add_argument("-S", "--scan_script_path", type=str, default=os.path.join(home_dir, "scripts", "scan_machine.py"), help="Path to nmap wrapper script (default: ~/scripts/scan_machine.py)")
+    parser.add_argument("-S", "--scan_script_path", type=str, default="/opt/scripts/scan_machine.py", help="Path to nmap wrapper script (default: /opt/scripts/scan_machine.py)")
     args = parser.parse_args()
 
     # Define local variables
@@ -60,10 +67,9 @@ def main():
                     sys.exit(130)
                 print(f"Scan script failed for target {target} with error: {e}")
                 continue
-            divider = f"\n  {color_codes['TARGET_COMPLETE']}<==============================================================================================================>{color_codes['NC']}\n"
-            print(divider)
-            print(f"                                       {color_codes['TARGET_COMPLETE']}SCAN COMPLETE FOR TARGET: {target}{color_codes['NC']}")
-            print(divider)
+            print_separator()
+            print_separator(f"SCAN COMPLETE FOR TARGET: {target}")
+            print_separator()
 
 if __name__ == "__main__":
     main()

@@ -6,10 +6,20 @@ import re
 import subprocess
 import sys
 
-color_codes = {
-    "SCAN_COMPLETE": "\033[0;32m", # Green
-    "NC": "\033[0m"
-}
+def print_separator(message=None):
+    try:
+        term_width = os.get_terminal_size().columns
+    except OSError:
+        term_width = 80
+    if message:
+        odd = ""
+        if (term_width - len(message)) % 2 == 1:
+            odd = "="
+        equal_space = (term_width - len(message) - 10) // 2
+        separator = "  <" + "=" * equal_space + " " + message + " " + "=" * equal_space + odd + ">"
+    else:
+        separator = "  <" + "=" * (term_width - 8) + ">"
+    print(f"\n \033[0;32m{separator}\033[0m\n")
 
 def was_scan_completed(filepath):
     """Check if the file exists, is non-empty, and has more than one line."""
@@ -85,12 +95,12 @@ def main():
 
         # Quick TCP scan
         run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-sCV", "--min-rate", "1000", "-v", ip])
-        print(f"\n  {color_codes['SCAN_COMPLETE']}<============================ Quick TCP scan complete. Launching full TCP scan... =============================>{color_codes['NC']}\n")
+        print_separator("Quick TCP scan complete. Launching full TCP scan...")
 
         # Full TCP scan
         print("Running full TCP scan (all ports)...")
         run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-p-", "--min-rate", "1000", "-oN", full_tcp_file, ip])
-        print(f"\n  {color_codes['SCAN_COMPLETE']}<=========================== Full TCP scan complete. Launching targeted TCP scan... ===========================>{color_codes['NC']}\n")
+        print_separator("Full TCP scan complete. Launching targeted TCP scan...")
 
         # Extract open ports for targeted TCP scan
         ports = extract_open_ports(full_tcp_file)
@@ -104,12 +114,12 @@ def main():
         if ports:
             print(f"Running targeted TCP scan on ports: {ports} ...")
             run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-sCV", "-oN", targeted_tcp_file, "-p", ports, ip])
-            print(f"\n  {color_codes['SCAN_COMPLETE']}<============================= Targeted TCP scan complete. Launching UDP scan... ==============================>{color_codes['NC']}\n")
+            print_separator("Targeted TCP scan complete. Launching UDP scan...")
         else:
             print("Full TCP scan was not completed; skipping targeted TCP scan.")
     else:
         cat_file(targeted_tcp_file)
-        print(f"\n  {color_codes['SCAN_COMPLETE']}<==============================================================================================================>{color_codes['NC']}\n")
+        print_separator()
 
     # UDP Scan
     if not was_scan_completed(udp_file):

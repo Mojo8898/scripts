@@ -18,7 +18,7 @@ def add_entry(log_file, entry):
             return
     try:
         subprocess.run(
-            ['sudo', 'tee', '-a', '/etc/hosts'],
+            ['sudo', '/usr/bin/tee', '-a', '/etc/hosts'],
             input=f"{entry}\n",
             text=True,
             check=True,

@@ -93,18 +93,18 @@ def dns_tasks(context):
 def http_tasks(context):
     target = context.vhost or context.domain
     if target:
-        run_task(context, f"firefox 'http://{target}' &; disown; ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://{target} -H 'Host: FUZZ.{target}' -ac; ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -u http://{target}/FUZZ")
+        run_task(context, f"firefox 'http://{target}' &> /dev/null & disown; ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://{target} -H 'Host: FUZZ.{target}' -ac; ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -u http://{target}/FUZZ")
     else:
         target = context.ip
-        run_task(context, f"firefox 'http://{target}' &; disown; ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -u http://{target}/FUZZ")
+        run_task(context, f"firefox 'http://{target}' &> /dev/null & disown; ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -u http://{target}/FUZZ")
     run_task(context, f"wpscan --url http://{target} --detection-mode aggressive -e ap,u; wpscan --url http://{target} --detection-mode aggressive -e ap,u --plugins-detection aggressive -o wpscan_long.out")
 
 @port_registry.register_port_handler(88)
 def kerberos_tasks(context):
     if context.creds_exist():
         user, passwd = context.get_initial_cred()
-        run_task(context, f"sudo ntpdate {context.ip}; getTGT.py {context.domain}/{user}:'{passwd}'")
-    run_task(context, f"sudo ntpdate {context.ip}; kerbrute userenum -d {context.domain} --dc {context.ip} /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt --downgrade")
+        # run_task(context, f"sudo ntpdate {context.ip}; getTGT.py {context.domain}/{user}:'{passwd}'")
+    # run_task(context, f"sudo ntpdate {context.ip}; kerbrute userenum -d {context.domain} --dc {context.ip} /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt --downgrade")
 
 @port_registry.register_port_handler(389)
 def ldap_tasks(context):

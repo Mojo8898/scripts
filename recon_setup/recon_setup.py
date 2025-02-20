@@ -81,15 +81,6 @@ def main():
     passwd = args.password
     debug = args.debug
 
-    # Initialize HTB machine if relevant arguments are included
-    if spawn:
-        ip = spawn_machine(machine, new_release)
-        if not ip:
-            print("Error: HTB CLI failed to provide an IP")
-            sys.exit(1)
-    else:
-        ip = args.ip
-
     # Define file paths
     scan_script_file = os.path.abspath(scan_script_path)
     vpn_file = os.path.abspath(vpn_path)
@@ -109,6 +100,15 @@ def main():
     elif not os.path.isfile(scan_script_file):
         print(f"Error: Required nmap wrapper script not found at {scan_script_file}", file=sys.stderr)
         sys.exit(1)
+
+    # Initialize HTB machine if relevant arguments are included
+    if spawn:
+        ip = spawn_machine(machine, new_release)
+        if not ip:
+            print("Error: HTB CLI failed to provide an IP")
+            sys.exit(1)
+    else:
+        ip = args.ip
 
     # Initialize environment
     os.makedirs(nmap_dir, exist_ok=True)

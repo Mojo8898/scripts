@@ -11,7 +11,7 @@ def populate_files(context):
     open(context.users_file, 'a').close()
     open(context.creds_file, 'a').close()
     # Write arsenal data
-    arsenal_entry = f'{{"ip": "{context.ip}", "dc_ip": "{context.ip}", "target": "{target}", "domain": "{context.domain or ''}", "domain_name": "{context.domain or ''}", "user": ""}}'
+    arsenal_entry = f'{{"ip": "{context.ip}", "dc_ip": "{context.ip}", "target": "{target}", "domain": "{context.domain or ""}", "domain_name": "{context.domain or ""}", "user": ""}}'
     home_dir = os.path.expanduser("~")
     arsenal_globals_file = os.path.join(home_dir, ".arsenal.json")
     with open(arsenal_globals_file, 'w') as f:
@@ -46,7 +46,7 @@ def populate_files(context):
             """).strip()
         try:
             subprocess.run(
-                ["sudo", "tee", "/etc/krb5.conf"],
+                ["sudo", "/usr/bin/tee", "/etc/krb5.conf"],
                 input=config_contents,
                 text=True,
                 check=True,

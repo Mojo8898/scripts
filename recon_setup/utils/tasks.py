@@ -128,7 +128,7 @@ def ldap_tasks(context):
 @port_registry.register_port_handler(443)
 def proto_tasks(context):
     fqdn = context.vhost or context.domain or context.ip
-    run_task(context, f"firefox 'https://{fqdn}' &; disown; curl -k https://{fqdn}; curl -Ik https://{fqdn}")
+    run_task(context, f"firefox 'https://{fqdn}' &> /dev/null & disown; curl -k https://{fqdn}; curl -Ik https://{fqdn}")
 
 @port_registry.register_port_handler(445)
 def smb_tasks(context):

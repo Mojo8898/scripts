@@ -11,10 +11,10 @@ Here are a collection of scripts I use regularly for offensive security-related 
 sudo apt install python3-impacket python3-libtmux python3-requests python3-rich python3-urllib3 python3-watchdog
 
 # Clone repo
-git clone https://github.com/Mojo8898/scripts.git ~/scripts
+sudo git clone https://github.com/Mojo8898/scripts.git /opt/scripts
 
 # Make nmap wrapper script executable
-chmod +x ~/scripts/scan_machine.py
+sudo chmod +x /opt/scripts/scan_machine.py
 ```
 
 Some automated scripts including the built-in nmap wrapper require sudo to run properly. Add the following line to the bottom of your `/etc/sudoers` file using the command `sudo visudo` to prevent password prompts.
@@ -29,28 +29,28 @@ kali    ALL=(ALL) NOPASSWD: ALL
 
 ```bash
 # Just configure working environment
-python3 ~/scripts/recon_setup/recon_setup.py -i 10.10.10.10 testing ~/htb/competitive_Mojo098.ovpn
+python3 /opt/scripts/recon_setup/recon_setup.py -i 10.10.10.10 testing ~/htb/competitive_Mojo098.ovpn
 
 # Configure working environment and launch automated tasks
-python3 ~/scripts/recon_setup/recon_setup.py -i 10.10.10.10 testing ~/htb/competitive_Mojo098.ovpn -a -u bob -p 'Password123!'
+python3 /opt/scripts/recon_setup/recon_setup.py -i 10.10.10.10 testing ~/htb/competitive_Mojo098.ovpn -a -u bob -p 'Password123!'
 ```
 
 ### scan_machine.py
 
 ```bash
-python3 ~/scripts/scan_machine.py 10.10.10.10
+python3 /opt/scripts/scan_machine.py 10.10.10.10
 ```
 
 ### scan_targets.py
 
 ```bash
-python3 ~/scripts/scan_targets.py external_hosts.txt
+python3 /opt/scripts/scan_targets.py external_hosts.txt
 ```
 
 ### cradle_gen.py
 
 ```bash
-python3 ~/scripts/cradle_gen.py 10.10.10.10 9001 -l
+python3 /opt/scripts/cradle_gen.py 10.10.10.10 9001 -l
 ```
 
 **Note:**

@@ -48,8 +48,9 @@ def main():
     session_group.add_argument("session_name", type=str, help="Name of the tmux session to be created")
     session_group.add_argument("vpn_path", type=str, help="Path of your VPN file")
     session_group.add_argument("-s", "--session_path", type=str, default=os.path.join(home_dir, "htb", "machines"), help="Path to where the session will be created (default: ~/htb/machines)")
-    session_group.add_argument("-S", "--scan_script_path", type=str, default=os.path.join(home_dir, "scripts", "scan_machine.py"), help="Path to nmap wrapper script (default: ~/scripts/scan_machine.py)")
+    session_group.add_argument("-S", "--scan_script_path", type=str, default="/opt/scripts/scan_machine.py", help="Path to nmap wrapper script (default: /opt/scripts/scan_machine.py)")
     session_group.add_argument("-i", "--ip", type=str, help="IP address of the target machine")
+    session_group.add_argument("-x", "--exegol", action="store_true", help="Use exegol paths (session_path is set to /workspace/machines instead of ~/htb/machines)")
 
     # Initialize HTB CLI arguments
     htb_cli_group = parser.add_argument_group("HTB CLI Arguments", "Arguments related to HTB CLI functionality")
@@ -73,6 +74,7 @@ def main():
     session_path = args.session_path
     scan_script_path = args.scan_script_path
     ip = args.ip
+    exegol = args.exegol
     spawn = args.spawn
     machine = args.machine
     new_release = args.new_release
@@ -92,6 +94,9 @@ def main():
     debug_file = os.path.join(log_dir, "debug.log")
     users_file = os.path.join(target_dir, "valid_users.txt")
     creds_file = os.path.join(target_dir, "creds.txt")
+
+    if exegol:
+        session_path = "/workspace/machines"
 
     # Check required file paths
     if not os.path.isfile(vpn_file):

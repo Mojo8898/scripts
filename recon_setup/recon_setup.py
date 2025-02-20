@@ -46,16 +46,15 @@ def main():
     # Initialize session arguments
     session_group = parser.add_argument_group("Session Arguments", "Arguments related to session configuration")
     session_group.add_argument("session_name", type=str, help="Name of the tmux session to be created")
-    session_group.add_argument("vpn_path", type=str, help="Path of your VPN file")
+    session_group.add_argument("-v", "--vpn_path", type=str, help="Path of your VPN file")
     session_group.add_argument("-s", "--session_path", type=str, default=os.path.join(home_dir, "htb", "machines"), help="Path to where the session will be created (default: ~/htb/machines)")
     session_group.add_argument("-S", "--scan_script_path", type=str, default="/opt/scripts/scan_machine.py", help="Path to nmap wrapper script (default: /opt/scripts/scan_machine.py)")
     session_group.add_argument("-i", "--ip", type=str, help="IP address of the target machine")
-    session_group.add_argument("-x", "--exegol", action="store_true", help="Use exegol session_path (/workspace/machines) instead of kali (~/htb/machines)")
+    session_group.add_argument("-x", "--exegol", action="store_true", help="Do not start VPN and use exegol session_path (/workspace/machines) instead of kali (~/htb/machines)")
 
     # Initialize HTB CLI arguments
     htb_cli_group = parser.add_argument_group("HTB CLI Arguments", "Arguments related to HTB CLI functionality")
-    htb_cli_group.add_argument("--spawn", action="store_true", help="Spawn the target machine using the HTB CLI instead of providing an IP (requires htb-cli)")
-    htb_cli_group.add_argument("-m", "--machine", type=str, help="Name of the target machine to spawn")
+    htb_cli_group.add_argument("--spawn", type=str, help="Spawn the target machine using the HTB CLI instead of providing an IP (requires htb-cli)")
     htb_cli_group.add_argument("-n", "--new_release", action="store_true", help="Wait for the scheduled release time (7pm UTC) and spawn automatically")
 
     # Initialize automation arguments
@@ -71,21 +70,28 @@ def main():
     # Define local variables
     session_name = args.session_name
     vpn_path = args.vpn_path
-    session_path = args.session_path
     scan_script_path = args.scan_script_path
     ip = args.ip
     exegol = args.exegol
     spawn = args.spawn
-    machine = args.machine
     new_release = args.new_release
     automate = args.automate
     user = args.username
     passwd = args.password
     debug = args.debug
 
+    # Define relevant variables based on exegol flag
+    if exegol:
+        session_path = "/workspace/machines"
+    else:
+        session_path = args.session_path
+        vpn_file = os.path.abspath(vpn_path)
+        if not os.path.isfile(vpn_file):
+            print(f"Error: Required VPN file not found at {vpn_file}", file=sys.stderr)
+            sys.exit(1)
+
     # Define file paths
     scan_script_file = os.path.abspath(scan_script_path)
-    vpn_file = os.path.abspath(vpn_path)
     target_dir = os.path.join(session_path, session_name)
     nmap_dir = os.path.join(target_dir, "nmap")
     log_dir = os.path.join(target_dir, "logs")
@@ -95,20 +101,14 @@ def main():
     users_file = os.path.join(target_dir, "valid_users.txt")
     creds_file = os.path.join(target_dir, "creds.txt")
 
-    if exegol:
-        session_path = "/workspace/machines"
-
-    # Check required file paths
-    if not os.path.isfile(vpn_file):
-        print(f"Error: Required VPN file not found at {vpn_file}", file=sys.stderr)
-        sys.exit(1)
-    elif not os.path.isfile(scan_script_file):
+    # Check for nmap wrapper script
+    if not os.path.isfile(scan_script_file):
         print(f"Error: Required nmap wrapper script not found at {scan_script_file}", file=sys.stderr)
         sys.exit(1)
 
     # Initialize HTB machine if relevant arguments are included
     if spawn:
-        ip = spawn_machine(machine, new_release)
+        ip = spawn_machine(spawn, new_release)
         if not ip:
             print("Error: HTB CLI failed to provide an IP")
             sys.exit(1)
@@ -127,14 +127,17 @@ def main():
         attach=False
     )
 
-    # Initialize openvpn window
-    openvpn_window = session.active_window
-    openvpn_pane = openvpn_window.active_pane
-    initialize_pane(openvpn_pane)
-    openvpn_pane.send_keys(f"sudo openvpn {vpn_file}")
+    if exegol:
+        base_window = session.active_window
+        base_window.rename_window(ip)
+    else:
+        openvpn_window = session.active_window
+        openvpn_pane = openvpn_window.active_pane
+        initialize_pane(openvpn_pane)
+        openvpn_pane.send_keys(f"sudo openvpn {vpn_file}")
+        base_window = session.new_window(window_name=ip)
 
-    # Initialize base window
-    base_window = session.new_window(window_name=f"{ip}")
+    # Initialize panes
     nmap_pane = base_window.active_pane
     base_pane = base_window.split(direction=libtmux.pane.PaneDirection.Right)
 

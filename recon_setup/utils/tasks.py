@@ -103,8 +103,8 @@ def http_tasks(context):
 def kerberos_tasks(context):
     if context.creds_exist():
         user, passwd = context.get_initial_cred()
-        # run_task(context, f"sudo ntpdate {context.ip}; getTGT.py {context.domain}/{user}:'{passwd}'")
-    # run_task(context, f"sudo ntpdate {context.ip}; kerbrute userenum -d {context.domain} --dc {context.ip} /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt --downgrade")
+        run_task(context, f"faketime \"$(date +'%Y-%m-%d') $(net time -S {context.ip} | awk '{{print $4}}')\" getTGT.py {context.domain}/{user}:'{passwd}'")
+    run_task(context, f"kerbrute userenum -d {context.domain} --dc {context.ip} /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt")
 
 @port_registry.register_port_handler(389)
 def ldap_tasks(context):
@@ -134,9 +134,9 @@ def proto_tasks(context):
 def smb_tasks(context):
     if context.creds_exist():
         user, passwd = context.get_initial_cred()
-        run_task(context, f"nxc smb {context.ip} -u {user} -p '{passwd}' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out; cat smb.out | grep TypeUser | cut -d '\\' -f 2 | cut -d ' ' -f 1 > users.txt; echo; cat users.txt")
+        run_task(context, f"nxc smb {context.ip} -u {user} -p '{passwd}' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out; cat smb.out | grep TypeUser | cut -d '\\' -f 2 | cut -d ' ' -f 1 > users.txt; echo; cat users.txt; echo")
     else:
-        run_task(context, f"nxc smb {context.ip} -u '' -p '' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out; nxc smb {context.ip} -u 'a' -p '' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out; cat smb.out | grep TypeUser | cut -d '\\' -f 2 | cut -d ' ' -f 1 > users.txt; echo; cat users.txt")
+        run_task(context, f"nxc smb {context.ip} -u '' -p '' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out; nxc smb {context.ip} -u 'a' -p '' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out; cat smb.out | grep TypeUser | cut -d '\\' -f 2 | cut -d ' ' -f 1 > users.txt; echo; cat users.txt; echo")
     shares, method = enumerate_smb_shares(context)
     if shares:
         for share in shares:

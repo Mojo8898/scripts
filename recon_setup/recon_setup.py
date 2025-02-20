@@ -50,7 +50,7 @@ def main():
     session_group.add_argument("-s", "--session_path", type=str, default=os.path.join(home_dir, "htb", "machines"), help="Path to where the session will be created (default: ~/htb/machines)")
     session_group.add_argument("-S", "--scan_script_path", type=str, default="/opt/scripts/scan_machine.py", help="Path to nmap wrapper script (default: /opt/scripts/scan_machine.py)")
     session_group.add_argument("-i", "--ip", type=str, help="IP address of the target machine")
-    session_group.add_argument("-x", "--exegol", action="store_true", help="Use exegol paths (session_path is set to /workspace/machines instead of ~/htb/machines)")
+    session_group.add_argument("-x", "--exegol", action="store_true", help="Use exegol session_path (/workspace/machines) instead of kali (~/htb/machines)")
 
     # Initialize HTB CLI arguments
     htb_cli_group = parser.add_argument_group("HTB CLI Arguments", "Arguments related to HTB CLI functionality")

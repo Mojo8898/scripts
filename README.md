@@ -18,10 +18,10 @@ cd /opt/scripts
 sudo chmod +x recon_setup/recon_setup.py cradle_gen.py scan_machine.py scan_targets.py
 
 # Create symbolic links to add standalone scripts to $PATH (pipx compatibility coming soon?)
-ln -s /opt/scripts/recon_setup/recon_setup.py /usr/local/bin/recon_setup.py
-ln -s /opt/scripts/scan_machine.py /usr/local/bin/scan_machine.py
-ln -s /opt/scripts/scan_targets.py /usr/local/bin/scan_targets.py
-ln -s /opt/scripts/cradle_gen.py /usr/local/bin/cradle_gen.py
+sudo ln -s /opt/scripts/recon_setup/recon_setup.py /usr/local/bin/recon_setup.py
+sudo ln -s /opt/scripts/scan_machine.py /usr/local/bin/scan_machine.py
+sudo ln -s /opt/scripts/scan_targets.py /usr/local/bin/scan_targets.py
+sudo ln -s /opt/scripts/cradle_gen.py /usr/local/bin/cradle_gen.py
 ```
 
 Some automated scripts including the built-in nmap wrapper require sudo to run properly. Either execute scripts as root or add the following line to the bottom of your `/etc/sudoers` file using the command `sudo visudo` to prevent password prompts.

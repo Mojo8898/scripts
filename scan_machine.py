@@ -16,10 +16,10 @@ def print_separator(message=None):
         if (term_width - len(message)) % 2 == 1:
             odd = "="
         equal_space = (term_width - len(message) - 10) // 2
-        separator = "  <" + "=" * equal_space + " " + message + " " + "=" * equal_space + odd + ">"
+        separator = "   <" + "=" * equal_space + " " + message + " " + "=" * equal_space + odd + ">"
     else:
-        separator = "  <" + "=" * (term_width - 8) + ">"
-    print(f"\n \033[0;32m{separator}\033[0m\n")
+        separator = "   <" + "=" * (term_width - 8) + ">"
+    print(f"\n\033[0;32m{separator}\033[0m\n")
 
 def was_scan_completed(filepath):
     """Check if the file exists, is non-empty, and has more than one line."""
@@ -36,11 +36,15 @@ def run_command(cmd):
     """Run a command and let its stdout/stderr go to the terminal."""
     try:
         subprocess.run(cmd, check=True)
+    except KeyboardInterrupt:
+        print("\nCtrl+C detected. Continuing...")
     except subprocess.CalledProcessError as e:
         if e.returncode == -2:
-            print("\nCtrl+C detected. Exiting...")
-            sys.exit(130)
-        print(f"\nError: Command '{' '.join(cmd)}' failed (exit code {e.returncode}).")
+            print("\nCtrl+C detected. Continuing...")
+            return
+        error_msg = e.stderr.strip() if e.stderr else 'Unknown error'
+        print(f"Failed to execute scan_machine.py with error: {error_msg}")
+        print(e.returncode)
         sys.exit(e.returncode)
 
 def cat_file(filepath):
@@ -94,13 +98,13 @@ def main():
     if not was_scan_completed(targeted_tcp_file):
 
         # Quick TCP scan
-        run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-sCV", "--min-rate", "1000", "-v", ip])
-        print_separator("Quick TCP scan complete. Launching full TCP scan...")
+        print_separator("Launching quick TCP scan...")
+        run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "--top-ports", "3000", "-sCV", "--min-rate", "1000", "-v", ip])
+        
 
         # Full TCP scan
-        print("Running full TCP scan (all ports)...")
+        print_separator("Launching full TCP scan...")
         run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-p-", "--min-rate", "1000", "-oN", full_tcp_file, ip])
-        print_separator("Full TCP scan complete. Launching targeted TCP scan...")
 
         # Extract open ports for targeted TCP scan
         ports = extract_open_ports(full_tcp_file)
@@ -112,21 +116,22 @@ def main():
 
         # Targeted TCP scan
         if ports:
-            print(f"Running targeted TCP scan on ports: {ports} ...")
+            print_separator("Launching targeted TCP scan...")
             run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-sCV", "-oN", targeted_tcp_file, "-p", ports, ip])
             print_separator("Targeted TCP scan complete. Launching UDP scan...")
         else:
-            print("Full TCP scan was not completed; skipping targeted TCP scan.")
+            print("\nFull TCP scan was not completed. Skipping targeted TCP scan...")
     else:
         cat_file(targeted_tcp_file)
-        print_separator()
 
     # UDP Scan
     if not was_scan_completed(udp_file):
-        print("Running UDP scan...")
+        print_separator("Launching UDP scan...")
         run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-sUV", "-T4", "--top-ports", "200", "-oN", udp_file, "-v", ip])
     else:
+        print_separator()
         cat_file(udp_file)
+    print()
 
 if __name__ == "__main__":
     main()

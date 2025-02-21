@@ -15,10 +15,10 @@ def print_separator(message=None):
         if (term_width - len(message)) % 2 == 1:
             odd = "="
         equal_space = (term_width - len(message) - 10) // 2
-        separator = "  <" + "=" * equal_space + " " + message + " " + "=" * equal_space + odd + ">"
+        separator = "   <" + "=" * equal_space + " " + message + " " + "=" * equal_space + odd + ">"
     else:
-        separator = "  <" + "=" * (term_width - 8) + ">"
-    print(f"\n \033[0;36m{separator}\033[0m\n")
+        separator = "   <" + "=" * (term_width - 8) + ">"
+    print(f"\n\033[0;36m{separator}\033[0m\n")
 
 def main():
     # Initialize arguments
@@ -57,19 +57,16 @@ def main():
             # Execute scan script
             try:
                 subprocess.run(
-                    ["python3", scan_script_path, target],
+                    [scan_script_path, target],
                     cwd=target,
                     check=True
                 )
             except subprocess.CalledProcessError as e:
-                if e.returncode == 130:
-                    print("\nCtrl+C detected. Exiting...")
-                    sys.exit(130)
-                print(f"Scan script failed for target {target} with error: {e}")
-                continue
-            print_separator()
-            print_separator(f"SCAN COMPLETE FOR TARGET: {target}")
-            print_separator()
+                error_msg = e.stderr.strip() if e.stderr else 'Unknown error'
+                print(f"Failed to execute nmap wrapper script with error: {error_msg}")
+            except Exception as e:
+                print(f"Failed to execute nmap wrapper script with error: {str(e)}")
+            print_separator(f"SCANNING COMPLETE FOR TARGET: {target}")
 
 if __name__ == "__main__":
     main()

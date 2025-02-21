@@ -21,22 +21,21 @@ class NmapLogHandler(FileSystemEventHandler):
                 tmux_pipe_file.seek(self.last_position)
                 new_lines = tmux_pipe_file.readlines()
                 self.last_position = tmux_pipe_file.tell()
-
                 for line in new_lines:
                     if "Discovered open port" in line:
                         parts = line.split()
                         port = parts[3].split('/')[0]
                         handle_task(self.context, port)
-                    elif "Completed SYN Stealth" in line:
+                    elif "Completed SYN Stealth" in line or "already completed" in line:
                         self.context.nmap_pane.cmd("pipe-pane")
-                    elif "already completed" in line:
-                        self.context.nmap_pane.cmd("pipe-pane")
-                        open_tcp_file = os.path.join(self.context.nmap_dir, "open_tcp.txt")
-                        with open(open_tcp_file, 'r') as open_ports_file:
-                            data = open_ports_file.read().strip()
-                            ports = data.split(',')
-                            for port in ports:
-                                handle_task(self.context, port)
+                        if "already completed" in line:
+                            self.context.nmap_pane.cmd("pipe-pane")
+                            open_tcp_file = os.path.join(self.context.nmap_dir, "open_tcp.txt")
+                            with open(open_tcp_file, 'r') as open_ports_file:
+                                data = open_ports_file.read().strip()
+                                ports = data.split(',')
+                                for port in ports:
+                                    handle_task(self.context, port)
                         self.completed.set() # Signal that scan is complete
 
 def watch_nmap(context):

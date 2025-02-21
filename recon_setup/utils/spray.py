@@ -17,9 +17,8 @@ def start_spraying(context):
 
 def enum_users(context):
     write_log(context.log_file, "Initial credential discovered. Enumerating users via LDAP...")
-    target = context.get_target()
     user, passwd = context.get_initial_cred()
-    cmd = f"bloodyAD --host {target} -d {context.domain} -u {user} -p '{passwd}' get search --filter objectClass=User --attr sAMAccountName | grep sAMAccountName | awk '{{print $2}}'"
+    cmd = f"bloodyAD --host {context.ip} -u {user} -p '{passwd}' get search --filter objectClass=User --attr sAMAccountName | grep sAMAccountName | awk '{{print $2}}'"
     # write_log(context.log_file, f"Executing: {cmd}\n")
     try:
         result = subprocess.run(

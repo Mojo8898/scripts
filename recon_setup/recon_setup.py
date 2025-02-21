@@ -11,7 +11,6 @@ from time import sleep
 
 from utils.context import Context
 from utils.htb_cli import spawn_machine
-from utils.tmux import initialize_pane
 from watchers.nmap_watcher import watch_nmap
 
 def set_death_signal(sig=signal.SIGHUP):
@@ -131,7 +130,6 @@ def main():
     else:
         openvpn_window = session.active_window
         openvpn_pane = openvpn_window.active_pane
-        initialize_pane(openvpn_pane)
         openvpn_pane.send_keys(f"sudo openvpn {vpn_file}")
         base_window = session.new_window(window_name=ip)
 
@@ -145,9 +143,9 @@ def main():
         set_death_signal()
 
         # Establish connection with VPN and initialize the base window
-        verify_connection(ip)
-        initialize_pane(nmap_pane)
-        initialize_pane(base_pane)
+        if not exegol:
+            verify_connection(ip)
+            sleep(1)
         session.select_window(1)
         base_pane.select()
 
@@ -177,7 +175,7 @@ def main():
 
             # Initialize task logging
             log_pane = base_pane.split(size=20)
-            initialize_pane(log_pane)
+            sleep(1)
             log_pane.send_keys(f"clear && tail -n +0 -f {log_file}")
 
             # Initialize nmap scanning and automation

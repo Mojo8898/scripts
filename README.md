@@ -16,6 +16,12 @@ cd /opt/scripts
 
 # Set standalone scripts as to be executable
 sudo chmod +x recon_setup/recon_setup.py cradle_gen.py scan_machine.py scan_targets.py
+
+# Create symbolic links to add standalone scripts to $PATH (pipx compatibility coming soon?)
+ln -s /opt/scripts/recon_setup/recon_setup.py /usr/local/bin/recon_setup.py
+ln -s /opt/scripts/scan_machine.py /usr/local/bin/scan_machine.py
+ln -s /opt/scripts/scan_targets.py /usr/local/bin/scan_targets.py
+ln -s /opt/scripts/cradle_gen.py /usr/local/bin/cradle_gen.py
 ```
 
 Some automated scripts including the built-in nmap wrapper require sudo to run properly. Either execute scripts as root or add the following line to the bottom of your `/etc/sudoers` file using the command `sudo visudo` to prevent password prompts.
@@ -30,28 +36,31 @@ kali    ALL=(ALL) NOPASSWD: ALL
 
 ```bash
 # Just configure working environment
-python3 /opt/scripts/recon_setup/recon_setup.py -i 10.10.10.10 testing ~/htb/competitive_Mojo098.ovpn
+recon_setup.py -i 10.10.10.10 testing ~/htb/competitive_Mojo098.ovpn
 
 # Configure working environment and launch automated tasks
-python3 /opt/scripts/recon_setup/recon_setup.py -i 10.10.10.10 testing ~/htb/competitive_Mojo098.ovpn -a -u bob -p 'Password123!'
+recon_setup.py -i 10.10.10.10 testing ~/htb/competitive_Mojo098.ovpn -a -u bob -p 'Password123!'
+
+# Launch inside of exegol
+recon_setup.py
 ```
 
 ### scan_machine.py
 
 ```bash
-python3 /opt/scripts/scan_machine.py 10.10.10.10
+scan_machine.py 10.10.10.10
 ```
 
 ### scan_targets.py
 
 ```bash
-python3 /opt/scripts/scan_targets.py external_hosts.txt
+scan_targets.py external_hosts.txt
 ```
 
 ### cradle_gen.py
 
 ```bash
-python3 /opt/scripts/cradle_gen.py 10.10.10.10 9001 -l
+cradle_gen.py 10.10.10.10 9001 -l
 ```
 
 **Note:**

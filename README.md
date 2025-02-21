@@ -36,13 +36,13 @@ kali    ALL=(ALL) NOPASSWD: ALL
 
 ```bash
 # Just configure working environment
-recon_setup.py -i 10.10.10.10 testing ~/htb/competitive_Mojo098.ovpn
+recon_setup.py administrator -i 10.10.10.10 -v ~/htb/competitive_Mojo098.ovpn
 
 # Configure working environment and launch automated tasks
-recon_setup.py -i 10.10.10.10 testing ~/htb/competitive_Mojo098.ovpn -a -u bob -p 'Password123!'
+recon_setup.py administrator -i 10.10.10.10 -v ~/htb/competitive_Mojo098.ovpn -a -u olivia -p 'ichliebedich'
 
 # Launch inside of exegol and utilize the HackTheBox CLI
-recon_setup.py administrator -x --spawn administrator -a -u olivia -p ichliebedich
+recon_setup.py administrator -x --spawn administrator -a -u olivia -p 'ichliebedich'
 ```
 
 ### scan_machine.py

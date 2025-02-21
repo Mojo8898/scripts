@@ -27,15 +27,16 @@ class NmapLogHandler(FileSystemEventHandler):
                         parts = line.split()
                         port = parts[3].split('/')[0]
                         handle_task(self.context, port)
-                    elif "Completed SYN Stealth" in line or "full TCP" in line:
+                    elif "Completed SYN Stealth" in line:
                         self.context.nmap_pane.cmd("pipe-pane")
-                        if "<" in line:
-                            open_tcp_file = os.path.join(self.context.nmap_dir, "open_tcp.txt")
-                            with open(open_tcp_file, 'r') as open_ports_file:
-                                data = open_ports_file.read().strip()
-                                ports = data.split(',')
-                                for port in ports:
-                                    handle_task(self.context, port)
+                    elif "already completed" in line:
+                        self.context.nmap_pane.cmd("pipe-pane")
+                        open_tcp_file = os.path.join(self.context.nmap_dir, "open_tcp.txt")
+                        with open(open_tcp_file, 'r') as open_ports_file:
+                            data = open_ports_file.read().strip()
+                            ports = data.split(',')
+                            for port in ports:
+                                handle_task(self.context, port)
                         self.completed.set() # Signal that scan is complete
 
 def watch_nmap(context):

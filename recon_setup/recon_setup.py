@@ -48,7 +48,6 @@ def main():
     session_group.add_argument("session_name", type=str, help="Name of the tmux session to be created")
     session_group.add_argument("-v", "--vpn_path", type=str, help="Path of your VPN file")
     session_group.add_argument("-s", "--session_path", type=str, default=os.path.join(home_dir, "htb", "machines"), help="Path to where the session will be created (default: ~/htb/machines)")
-    session_group.add_argument("-S", "--scan_script_path", type=str, default="/opt/scripts/scan_machine.py", help="Path to nmap wrapper script (default: /opt/scripts/scan_machine.py)")
     session_group.add_argument("-i", "--ip", type=str, help="IP address of the target machine")
     session_group.add_argument("-x", "--exegol", action="store_true", help="Do not start VPN and use exegol session_path (/workspace/machines) instead of kali (~/htb/machines)")
 
@@ -70,7 +69,6 @@ def main():
     # Define local variables
     session_name = args.session_name
     vpn_path = args.vpn_path
-    scan_script_path = args.scan_script_path
     ip = args.ip
     exegol = args.exegol
     spawn = args.spawn
@@ -91,7 +89,7 @@ def main():
             sys.exit(1)
 
     # Define file paths
-    scan_script_file = os.path.abspath(scan_script_path)
+    scan_script_file = "/opt/scripts/scan_machine.py"
     target_dir = os.path.join(session_path, session_name)
     nmap_dir = os.path.join(target_dir, "nmap")
     log_dir = os.path.join(target_dir, "logs")

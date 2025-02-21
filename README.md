@@ -41,8 +41,8 @@ recon_setup.py -i 10.10.10.10 testing ~/htb/competitive_Mojo098.ovpn
 # Configure working environment and launch automated tasks
 recon_setup.py -i 10.10.10.10 testing ~/htb/competitive_Mojo098.ovpn -a -u bob -p 'Password123!'
 
-# Launch inside of exegol
-recon_setup.py
+# Launch inside of exegol and utilize the HackTheBox CLI
+recon_setup.py administrator -x --spawn administrator -a -u olivia -p ichliebedich
 ```
 
 ### scan_machine.py

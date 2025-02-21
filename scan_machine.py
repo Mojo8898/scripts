@@ -37,10 +37,10 @@ def run_command(cmd):
     try:
         subprocess.run(cmd, check=True)
     except KeyboardInterrupt:
-        print("\nCtrl+C detected. Continuing...")
+        print("\nCtrl+C detected; aborting current scan.")
     except subprocess.CalledProcessError as e:
         if e.returncode == -2:
-            print("\nCtrl+C detected. Continuing...")
+            print("\nCtrl+C detected; aborting current scan.")
             return
         error_msg = e.stderr.strip() if e.stderr else 'Unknown error'
         print(f"Failed to execute scan_machine.py with error: {error_msg}")

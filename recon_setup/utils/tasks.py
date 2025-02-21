@@ -83,7 +83,9 @@ def proto_tasks(context):
     if context.creds_exist():
         user, passwd = context.get_initial_cred()
         if passwd:
-            run_task(context, f"nxc ftp {context.ip} -u {user} -p '{passwd}'")
+            run_task(context, f"nxc ftp {context.ip} -u '' -p '' --ls; nxc ftp {context.ip} -u {user} -p '{passwd}' --ls")
+    else:
+        run_task(context, f"nxc ftp {context.ip} -u '' -p '' --ls")
 
 @port_registry.register_port_handler(53)
 def dns_tasks(context):

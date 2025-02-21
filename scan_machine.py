@@ -118,7 +118,6 @@ def main():
         if ports:
             print_separator("Launching targeted TCP scan...")
             run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-sCV", "-oN", targeted_tcp_file, "-p", ports, ip])
-            print_separator("Targeted TCP scan complete. Launching UDP scan...")
         else:
             print("\nFull TCP scan was not completed. Skipping targeted TCP scan...")
     else:

@@ -10,14 +10,15 @@ Here are a collection of scripts I use regularly for offensive security-related 
 # Install dependencies (kali only)
 sudo apt install python3-impacket python3-libtmux python3-requests python3-rich python3-urllib3 python3-watchdog
 
-# Clone repo
+# Clone repo and cd
 sudo git clone https://github.com/Mojo8898/scripts.git /opt/scripts
+cd /opt/scripts
 
-# Make nmap wrapper script executable
-sudo chmod +x /opt/scripts/scan_machine.py
+# Set standalone scripts as to be executable
+sudo chmod +x recon_setup/recon_setup.py cradle_gen.py scan_machine.py scan_targets.py
 ```
 
-Some automated scripts including the built-in nmap wrapper require sudo to run properly. Add the following line to the bottom of your `/etc/sudoers` file using the command `sudo visudo` to prevent password prompts.
+Some automated scripts including the built-in nmap wrapper require sudo to run properly. Either execute scripts as root or add the following line to the bottom of your `/etc/sudoers` file using the command `sudo visudo` to prevent password prompts.
 
 ```
 kali    ALL=(ALL) NOPASSWD: ALL

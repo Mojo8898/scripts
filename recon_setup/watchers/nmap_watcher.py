@@ -27,7 +27,7 @@ class NmapLogHandler(FileSystemEventHandler):
                         parts = line.split()
                         port = parts[3].split('/')[0]
                         handle_task(self.context, port)
-                    elif "Completed SYN Stealth" in line or "<" in line:
+                    elif "Completed SYN Stealth" in line or "full TCP" in line:
                         self.context.nmap_pane.cmd("pipe-pane")
                         if "<" in line:
                             open_tcp_file = os.path.join(self.context.nmap_dir, "open_tcp.txt")

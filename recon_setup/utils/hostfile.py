@@ -33,7 +33,7 @@ def add_entry(log_file, entry):
 
 def resolve_host(log_file, ip):
     try:
-        conn = SMBConnection(ip, ip, timeout=1)
+        conn = SMBConnection(ip, ip, timeout=2)
         conn.login("", "")
         hostname = conn.getServerName()
         domain = conn.getServerDNSDomainName()

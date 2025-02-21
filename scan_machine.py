@@ -121,6 +121,7 @@ def main():
         else:
             print("\nFull TCP scan was not completed. Skipping targeted TCP scan...")
     else:
+        print_separator("Targeted TCP scan already completed")
         cat_file(targeted_tcp_file)
 
     # UDP Scan
@@ -128,7 +129,7 @@ def main():
         print_separator("Launching UDP scan...")
         run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-sUV", "-T4", "--top-ports", "200", "-oN", udp_file, "-v", ip])
     else:
-        print_separator()
+        print_separator("UDP scan already completed")
         cat_file(udp_file)
     print()
 

@@ -1,5 +1,6 @@
 import os
 import fcntl
+import re
 import socket
 import struct
 import subprocess
@@ -19,7 +20,8 @@ def update_tmux_conf():
     tmux_conf_path = os.path.expanduser("~/.tmux.conf")
     with open(tmux_conf_path, "r") as f:
         data = f.read()
-    new_data = data.replace("<tun0_ip>", tun0_ip)
+    ip_pattern = r'\b((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}'
+    new_data = re.sub(ip_pattern, tun0_ip, data)
     with open(tmux_conf_path, "w") as f:
         f.write(new_data)
 

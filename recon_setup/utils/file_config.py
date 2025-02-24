@@ -1,8 +1,27 @@
 import os
+import fcntl
+import socket
+import struct
 import subprocess
 import textwrap
 
 from utils.logger import write_log
+
+def update_tmux_conf():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    tun0_ip = socket.inet_ntoa(
+        fcntl.ioctl(
+            s.fileno(),
+            0x8915,
+            struct.pack('256s', 'tun0'[:15].encode('utf-8'))
+        )[20:24]
+    )
+    tmux_conf_path = os.path.expanduser("~/.tmux.conf")
+    with open(tmux_conf_path, "r") as f:
+        data = f.read()
+    new_data = data.replace("<tun0_ip>", tun0_ip)
+    with open(tmux_conf_path, "w") as f:
+        f.write(new_data)
 
 def populate_files(context):
     target = context.get_target()

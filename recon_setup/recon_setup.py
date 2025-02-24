@@ -10,6 +10,7 @@ import sys
 from time import sleep
 
 from utils.context import Context
+from utils.file_config import update_tmux_conf
 from utils.htb_cli import spawn_machine
 from watchers.nmap_watcher import watch_nmap
 
@@ -79,6 +80,7 @@ def main():
 
     # Define relevant variables based on exegol flag
     if exegol:
+        update_tmux_conf()
         session_path = "/workspace/machines"
     else:
         session_path = args.session_path
@@ -120,18 +122,16 @@ def main():
     server = libtmux.Server()
     session = server.new_session(
         session_name=session_name,
-        window_name="openvpn",
+        window_name=f"{'ligolo' if exegol else 'openvpn'}",
         attach=False
     )
-
+    initial_window = session.active_window
+    initial_pane = initial_window.active_pane
     if exegol:
-        base_window = session.active_window
-        base_window.rename_window(ip)
+        initial_pane.send_keys("proxy -selfcert")
     else:
-        openvpn_window = session.active_window
-        openvpn_pane = openvpn_window.active_pane
-        openvpn_pane.send_keys(f"sudo openvpn {vpn_file}")
-        base_window = session.new_window(window_name=ip)
+        initial_pane.send_keys(f"sudo openvpn {vpn_file}")
+    base_window = session.new_window(window_name=ip)
 
     # Initialize panes
     nmap_pane = base_window.active_pane

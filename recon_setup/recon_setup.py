@@ -128,7 +128,9 @@ def main():
     initial_window = session.active_window
     initial_pane = initial_window.active_pane
     if exegol:
-        initial_pane.send_keys("proxy -selfcert")
+        initial_pane.send_keys("mkdir ligolo; cd ligolo; proxy -selfcert")
+        updog_pane = initial_window.split(direction=libtmux.pane.PaneDirection.Below)
+        updog_pane.send_keys("updog -p 80 -d ~/staging")
     else:
         initial_pane.send_keys(f"sudo openvpn {vpn_file}")
     base_window = session.new_window(window_name=ip)

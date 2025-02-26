@@ -10,21 +10,49 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 def add_entry(log_file, entry):
     """Handle hostfile generation and return hostname/domain"""
     # Check if entry exists
-    with open("/etc/hosts", "r") as f:
-        content = f.read()
-        ip = entry.split()[0]
-        if ip in content:
-            write_log(log_file, f"/etc/hosts entry already exists for {ip}", "WARN")
-            return
+    parts = entry.split()
+    if not parts:
+        write_log(log_file, "Empty entry provided.", "ERROR")
+        return
+    new_ip = parts[0]
+    new_hosts = set(host.lower() for host in parts[1:])
+    try:
+        with open("/etc/hosts", "r") as f:
+            lines = f.readlines()
+    except Exception as e:
+        write_log(log_file, f"Failed to read /etc/hosts: {str(e)}", "ERROR")
+        return
+    filtered_lines = []
+    removed_entries = []
+    for line in lines:
+        stripped_line = line.strip()
+        if not stripped_line or stripped_line.startswith("#"):
+            filtered_lines.append(line)
+            continue
+        line_parts = stripped_line.split()
+        if not line_parts:
+            filtered_lines.append(line)
+            continue
+        line_ip = line_parts[0]
+        line_hosts = set(host.lower() for host in line_parts[1:])
+        if line_ip == new_ip or new_hosts.intersection(line_hosts):
+            removed_entries.append(stripped_line)
+            continue
+        filtered_lines.append(line)
+    filtered_lines.append(entry + "\n")
+    new_content = "".join(filtered_lines)
     try:
         subprocess.run(
-            ['sudo', '/usr/bin/tee', '-a', '/etc/hosts'],
-            input=f"{entry}\n",
+            ['sudo', '/usr/bin/tee', '/etc/hosts'],
+            input=new_content,
             text=True,
             check=True,
             capture_output=True
         )
-        write_log(log_file, f"Added host entry: {entry}")
+        write_log(log_file, f"Added /etc/hosts entry: {entry}")
+        if removed_entries:
+            removed_str = ", ".join(removed_entries)
+            write_log(log_file, f"- Removed conflicting entries: {removed_str}", "WARN")
     except subprocess.CalledProcessError as e:
         error_msg = e.stderr.strip() if e.stderr else 'Unknown error'
         write_log(log_file, f"Failed to write to /etc/hosts with error: {error_msg}", "ERROR")
@@ -34,10 +62,13 @@ def add_entry(log_file, entry):
 def resolve_host(log_file, ip):
     try:
         conn = SMBConnection(ip, ip, timeout=2)
-        conn.login("", "")
+        try:
+            conn.login("", "")
+            conn.logoff()
+        except:
+            pass
         hostname = conn.getServerName()
         domain = conn.getServerDNSDomainName()
-        conn.logoff()
 
         if not domain or hostname == domain:
             entry = f"{ip}\t{hostname}"

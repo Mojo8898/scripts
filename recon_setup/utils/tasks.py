@@ -103,10 +103,11 @@ def http_tasks(context):
 
 @port_registry.register_port_handler(88)
 def kerberos_tasks(context):
-    if context.creds_exist():
-        user, passwd = context.get_initial_cred()
-        run_task(context, f"faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" getTGT.py {context.domain}/{user}:'{passwd}'")
-    run_task(context, f"kerbrute userenum -d {context.domain} --dc {context.ip} /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt")
+    if context.domain:
+        if context.creds_exist():
+            user, passwd = context.get_initial_cred()
+            run_task(context, f"faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" getTGT.py {context.domain}/{user}:'{passwd}'")
+        run_task(context, f"kerbrute userenum -d {context.domain} --dc {context.ip} /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt")
 
 @port_registry.register_port_handler(389)
 def ldap_tasks(context):

@@ -8,19 +8,26 @@ import textwrap
 
 from utils.logger import write_log
 
-def update_tmux_conf():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    tun0_ip = socket.inet_ntoa(
-        fcntl.ioctl(
-            s.fileno(),
-            0x8915,
-            struct.pack('256s', 'tun0'[:15].encode('utf-8'))
-        )[20:24]
-    )
+def get_tun0_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        tun0_ip = socket.inet_ntoa(
+            fcntl.ioctl(
+                s.fileno(),
+                0x8915,
+                struct.pack('256s', 'tun0'[:15].encode('utf-8'))
+            )[20:24]
+        )
+        return tun0_ip
+    except OSError:
+        return None
+
+def write_exegol_configs():
     tmux_conf_path = os.path.expanduser("~/.tmux.conf")
     with open(tmux_conf_path, "r") as f:
         data = f.read()
     ip_pattern = r'\b((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}'
+    tun0_ip = get_tun0_ip() or "127.0.0.1"
     new_data = re.sub(ip_pattern, tun0_ip, data)
     with open(tmux_conf_path, "w") as f:
         f.write(new_data)
@@ -32,7 +39,8 @@ def populate_files(context):
     open(context.users_file, 'a').close()
     open(context.creds_file, 'a').close()
     # Write arsenal data
-    arsenal_entry = f'{{"ip": "{context.ip}", "dc_ip": "{context.ip}", "target": "{target}", "domain": "{context.domain or ""}", "domain_name": "{context.domain or ""}", "user": "", "file": ""}}'
+    tun0_ip = get_tun0_ip() or ""
+    arsenal_entry = f'{{"our_ip": "{tun0_ip}" "ip": "{context.ip}", "dc_ip": "{context.ip}", "target": "{target}", "domain": "{context.domain or ""}", "domain_name": "{context.domain or ""}", "user": "", "file": ""}}'
     home_dir = os.path.expanduser("~")
     arsenal_globals_file = os.path.join(home_dir, ".arsenal.json")
     with open(arsenal_globals_file, 'w') as f:

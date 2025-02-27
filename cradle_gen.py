@@ -38,7 +38,7 @@ def main():
     parser = argparse.ArgumentParser(description="Generate common reverse shell strings for easy copy pasting.")
     parser.add_argument("lhost", type=str, help="Listen host")
     parser.add_argument("lport", type=str, help="Listen port")
-    parser.add_argument("-s", "--staging_port", type=str, default="8000", help="Port to host stage 2 payloads (defaults to 8000)")
+    parser.add_argument("-s", "--staging_port", type=str, default="80", help="Port to host stage 2 payloads (defaults to 80)")
     parser.add_argument("-l", "--listen", action="store_true", help="Automatically start a listener on lport")
     args = parser.parse_args()
 

@@ -40,7 +40,7 @@ def populate_files(context):
     open(context.creds_file, 'a').close()
     # Write arsenal data
     tun0_ip = get_tun0_ip() or ""
-    arsenal_entry = f'{{"our_ip": "{tun0_ip}" "ip": "{context.ip}", "dc_ip": "{context.ip}", "target": "{target}", "domain": "{context.domain or ""}", "domain_name": "{context.domain or ""}", "user": "", "file": ""}}'
+    arsenal_entry = f'{{"our_ip": "{tun0_ip}", "ip": "{context.ip}", "dc_ip": "{context.ip}", "target": "{target}", "domain": "{context.domain or ""}", "domain_name": "{context.domain or ""}", "user": "", "file": ""}}'
     home_dir = os.path.expanduser("~")
     arsenal_globals_file = os.path.join(home_dir, ".arsenal.json")
     with open(arsenal_globals_file, 'w') as f:

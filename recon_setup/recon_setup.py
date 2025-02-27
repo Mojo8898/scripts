@@ -10,7 +10,7 @@ import sys
 from time import sleep
 
 from utils.context import Context
-from utils.file_config import update_tmux_conf
+from utils.file_config import write_exegol_configs
 from utils.htb_cli import spawn_machine
 from watchers.nmap_watcher import watch_nmap
 
@@ -80,7 +80,7 @@ def main():
 
     # Define relevant variables based on exegol flag
     if exegol:
-        update_tmux_conf()
+        write_exegol_configs()
         session_path = "/workspace/machines"
     else:
         session_path = args.session_path
@@ -122,15 +122,17 @@ def main():
     server = libtmux.Server()
     session = server.new_session(
         session_name=session_name,
-        window_name=f"{'ligolo' if exegol else 'openvpn'}",
+        window_name=f"{'services' if exegol else 'openvpn'}",
         attach=False
     )
     initial_window = session.active_window
     initial_pane = initial_window.active_pane
     if exegol:
-        initial_pane.send_keys("mkdir ligolo; cd ligolo; proxy -selfcert")
+        initial_pane.send_keys("mkdir -p ligolo; cd ligolo; proxy -selfcert")
         updog_pane = initial_window.split(direction=libtmux.pane.PaneDirection.Below)
         updog_pane.send_keys("updog -p 80 -d ~/staging")
+        smbserver_pane = updog_pane.split(direction=libtmux.pane.PaneDirection.Right)
+        smbserver_pane.send_keys("smbserver.py -smb2support a . -username mojo -password 'Password123!'")
     else:
         initial_pane.send_keys(f"sudo openvpn {vpn_file}")
     base_window = session.new_window(window_name=ip)

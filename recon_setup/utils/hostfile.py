@@ -61,7 +61,7 @@ def add_entry(log_file, entry):
 
 def resolve_host(log_file, ip):
     try:
-        conn = SMBConnection(ip, ip, timeout=2)
+        conn = SMBConnection(ip, ip, timeout=3)
         try:
             conn.login("", "")
             conn.logoff()

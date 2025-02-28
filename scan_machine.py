@@ -75,10 +75,12 @@ def main():
     # Initialize arguments
     parser = argparse.ArgumentParser(description="Wrapper for nmap scans")
     parser.add_argument("ip", type=str, help="IP address of the target machine")
+    parser.add_argument("-l", "--lightweight", action="store_true", help="Lightweight TCP scan")
     args = parser.parse_args()
 
     # Define local variables
     ip = args.ip
+    lightweight = args.lightweight
 
     # Create nmap directory
     nmap_dir = "nmap"
@@ -89,49 +91,54 @@ def main():
         sys.exit(1)
 
     # Define file paths
+    lightweight_tcp_file = os.path.join(nmap_dir, "lightweight.nmap")
     full_tcp_file = os.path.join(nmap_dir, "full_tcp.nmap")
     targeted_tcp_file = os.path.join(nmap_dir, "targeted_tcp.nmap")
     open_tcp_file = os.path.join(nmap_dir, "open_tcp.txt")
     udp_file = os.path.join(nmap_dir, "udp.nmap")
 
-    # Start scans if they were not already ran
-    if not was_scan_completed(targeted_tcp_file):
+    if lightweight:
 
-        # Quick TCP scan
-        print_separator("Launching quick TCP scan...")
-        run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "--top-ports", "3000", "-sCV", "--min-rate", "1000", "-v", ip])
-        
+        # Lightweight TCP scan
+        print_separator("Launching lightweight TCP scan...")
+        run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-p", "21,22,23,25,53,80,88,110,111,135,137,139,143,389,443,445,636,993,995,1433,2049,3306,3389,5900,5985,8080", "-sCV", "--open", "-oN", lightweight_tcp_file, "-v", ip])
+    else:
+        if not was_scan_completed(targeted_tcp_file):
 
-        # Full TCP scan
-        print_separator("Launching full TCP scan...")
-        run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-p-", "--min-rate", "1000", "-oN", full_tcp_file, ip])
+            # Quick TCP scan
+            print_separator("Launching quick TCP scan...")
+            run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "--top-ports", "3000", "-sCV", "--min-rate", "1000", "-v", ip])
 
-        # Extract open ports for targeted TCP scan
-        ports = extract_open_ports(full_tcp_file)
-        try:
-            with open(open_tcp_file, "w") as f:
-                f.write(ports)
-        except Exception as e:
-            print(f"Error writing to {open_tcp_file}: {e}")
+            # Full TCP scan
+            print_separator("Launching full TCP scan...")
+            run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-p-", "--min-rate", "1000", "-oN", full_tcp_file, ip])
 
-        # Targeted TCP scan
-        if ports:
-            print_separator("Launching targeted TCP scan...")
-            run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-sCV", "-oN", targeted_tcp_file, "-p", ports, ip])
+            # Extract open ports for targeted TCP scan
+            ports = extract_open_ports(full_tcp_file)
+            try:
+                with open(open_tcp_file, "w") as f:
+                    f.write(ports)
+            except Exception as e:
+                print(f"Error writing to {open_tcp_file}: {e}")
+
+            # Targeted TCP scan
+            if ports:
+                print_separator("Launching targeted TCP scan...")
+                run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-p", ports, "-sCV", "-oN", targeted_tcp_file, ip])
+            else:
+                print("\nFull TCP scan was not completed. Skipping targeted TCP scan...")
         else:
-            print("\nFull TCP scan was not completed. Skipping targeted TCP scan...")
-    else:
-        print_separator("Targeted TCP scan already completed")
-        cat_file(targeted_tcp_file)
+            print_separator("Targeted TCP scan already completed")
+            cat_file(targeted_tcp_file)
 
-    # UDP Scan
-    if not was_scan_completed(udp_file):
-        print_separator("Launching UDP scan...")
-        run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-sUV", "-T4", "--top-ports", "200", "-oN", udp_file, "-v", ip])
-    else:
-        print_separator("UDP scan already completed")
-        cat_file(udp_file)
-    print()
+        # UDP Scan
+        if not was_scan_completed(udp_file):
+            print_separator("Launching UDP scan...")
+            run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-sUV", "-T4", "--top-ports", "200", "-oN", udp_file, "-v", ip])
+        else:
+            print_separator("UDP scan already completed")
+            cat_file(udp_file)
+        print()
 
 if __name__ == "__main__":
     main()

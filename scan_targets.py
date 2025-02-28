@@ -25,11 +25,13 @@ def main():
     parser = argparse.ArgumentParser(description="Execute scan_machine.py on a list of targets from a file.")
     parser.add_argument("targets_file", type=str, help="File containing the list of targets to scan separated by newlines")
     parser.add_argument("-s", "--scan_script_path", type=str, default="/opt/scripts/scan_machine.py", help="Path to nmap wrapper script (default: /opt/scripts/scan_machine.py)")
+    parser.add_argument("-l", "--lightweight", action="store_true", help="Utilize lightweight TCP scans")
     args = parser.parse_args()
 
     # Define local variables
     targets_file = args.targets_file
     scan_script_path = args.scan_script_path
+    lightweight = args.lightweight
 
     # Check required file paths
     if not os.path.isfile(targets_file):
@@ -47,20 +49,26 @@ def main():
                 continue
 
             # Create target directory
-            target_nmap_dir = os.path.join(target, "nmap")
             try:
-                os.makedirs(target_nmap_dir, exist_ok=True)
+                os.makedirs(target, exist_ok=True)
             except OSError as e:
                 print(f"Failed to create directory for target {target}: {e}")
                 continue
 
             # Execute scan script
             try:
-                subprocess.run(
-                    [scan_script_path, target],
-                    cwd=target,
-                    check=True
-                )
+                if lightweight:
+                    subprocess.run(
+                        [scan_script_path, target, "-l"],
+                        cwd=target,
+                        check=True
+                    )
+                else:
+                    subprocess.run(
+                        [scan_script_path, target],
+                        cwd=target,
+                        check=True
+                    )
             except subprocess.CalledProcessError as e:
                 error_msg = e.stderr.strip() if e.stderr else 'Unknown error'
                 print(f"Failed to execute nmap wrapper script with error: {error_msg}")

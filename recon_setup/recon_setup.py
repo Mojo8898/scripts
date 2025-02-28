@@ -187,7 +187,7 @@ def main():
             nmap_pane.cmd("pipe-pane", f"cat >> {tmux_pipe_file}")
             nmap_pane.send_keys(f"{scan_script_file} {ip}")
             watch_nmap(context)
-        else:
+        elif ip:
             nmap_pane.send_keys(f"{scan_script_file} {ip}")
         os._exit(0)
     else:

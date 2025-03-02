@@ -1,6 +1,6 @@
-# Credit: pigeonburger - https://github.com/pigeonburger/global-address-list-owa
-
 #!/usr/bin/env python3
+
+# Credit: pigeonburger - https://github.com/pigeonburger/global-address-list-owa
 
 import requests, json, argparse
 import urllib3

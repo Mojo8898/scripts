@@ -130,7 +130,7 @@ def main():
     if exegol:
         initial_pane.send_keys("mkdir -p ligolo; cd ligolo; proxy -selfcert")
         updog_pane = initial_window.split(direction=libtmux.pane.PaneDirection.Below)
-        updog_pane.send_keys("updog -p 80 -d ~/staging")
+        updog_pane.send_keys("updog -p 8000 -d ~/staging")
         smbserver_pane = updog_pane.split(direction=libtmux.pane.PaneDirection.Right)
         smbserver_pane.send_keys("smbserver.py -smb2support a . -username mojo -password 'Password123!'")
     else:

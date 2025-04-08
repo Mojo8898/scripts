@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
 # Credit: pigeonburger - https://github.com/pigeonburger/global-address-list-owa
 

@@ -1,5 +1,5 @@
 from impacket.ldap.ldap import LDAPConnection, Scope
-from libtmux.pane import PaneDirection
+import libtmux
 from time import sleep
 
 from utils.logger import write_log
@@ -58,7 +58,7 @@ def prepare_task_pane(context):
         pane = new_window.attached_pane
         for _ in range(2):
             pane = pane.split()
-            pane = pane.split(direction=PaneDirection.Right)
+            pane = pane.split(direction=libtmux.pane.PaneDirection.Right)
         pane = pane.split()
         new_window.select_layout('tiled')
         # Update session tracking

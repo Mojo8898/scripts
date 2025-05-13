@@ -117,7 +117,7 @@ def main():
     ligolo_pane.send_keys("mkdir -p ligolo; cd ligolo; proxy -selfcert")
     updog_pane = ligolo_pane.split(direction=libtmux.pane.PaneDirection.Right)
     updog_pane.send_keys("updog -p 8000 -d ~/staging")
-    smbserver_pane = updog_pane.split(direction=libtmux.pane.PaneDirection.Below)
+    smbserver_pane = updog_pane.split(direction=libtmux.pane.PaneDirection.Below, size=20)
     smbserver_pane.send_keys("smbserver.py -smb2support a . -username mojo -password 'Password123!'")
     base_window = session.new_window(window_name=ip)
 

@@ -10,7 +10,6 @@ import sys
 from time import sleep
 
 from utils.context import Context
-from utils.file_config import write_exegol_configs
 from utils.htb_cli import spawn_machine
 from watchers.nmap_watcher import watch_nmap
 
@@ -37,9 +36,6 @@ def verify_connection(ip):
     sleep(1)
 
 def main():
-    # Define home directory
-    home_dir = os.path.expanduser("~")
-
     # Initialize parser
     parser = argparse.ArgumentParser(description="Automate the setup and enumeration process for offensive security labs.")
 
@@ -47,9 +43,8 @@ def main():
     session_group = parser.add_argument_group("Session Arguments", "Arguments related to session configuration")
     session_group.add_argument("session_name", type=str, help="Name of the tmux session to be created")
     session_group.add_argument("-v", "--vpn_path", type=str, help="Path of your VPN file")
-    session_group.add_argument("-s", "--session_path", type=str, default=os.path.join(home_dir, "htb", "machines"), help="Path to where the session will be created (default: ~/htb/machines)")
+    session_group.add_argument("-s", "--session_path", type=str, default="/workspace/machines", help="Path to where the session will be created (default: /workspace/machines)")
     session_group.add_argument("-i", "--ip", type=str, help="IP address of the target machine")
-    session_group.add_argument("-x", "--exegol", action="store_true", help="Do not start VPN and use exegol session_path (/workspace/machines) instead of kali (~/htb/machines)")
 
     # Initialize HTB CLI arguments
     htb_cli_group = parser.add_argument_group("HTB CLI Arguments", "Arguments related to HTB CLI functionality")
@@ -68,26 +63,15 @@ def main():
 
     # Define local variables
     session_name = args.session_name
-    vpn_path = args.vpn_path
+    vpn_path = os.path.abspath(args.vpn_path)
+    session_path = args.session_path
     ip = args.ip
-    exegol = args.exegol
     spawn = args.spawn
     new_release = args.new_release
     automate = args.automate
     user = args.username
     passwd = args.password
     debug = args.debug
-
-    # Define relevant variables based on exegol flag
-    if exegol:
-        write_exegol_configs()
-        session_path = "/workspace/machines"
-    else:
-        session_path = args.session_path
-        vpn_file = os.path.abspath(vpn_path)
-        if not os.path.isfile(vpn_file):
-            print(f"Error: Required VPN file not found at {vpn_file}", file=sys.stderr)
-            sys.exit(1)
 
     # Define file paths
     scan_script_file = "/opt/scripts/scan_machine.py"
@@ -122,19 +106,19 @@ def main():
     server = libtmux.Server()
     session = server.new_session(
         session_name=session_name,
-        window_name=f"{'services' if exegol else 'openvpn'}",
+        window_name="services",
         attach=False
     )
     initial_window = session.active_window
-    initial_pane = initial_window.active_pane
-    if exegol:
-        initial_pane.send_keys("mkdir -p ligolo; cd ligolo; proxy -selfcert")
-        updog_pane = initial_window.split(direction=libtmux.pane.PaneDirection.Below)
-        updog_pane.send_keys("updog -p 8000 -d ~/staging")
-        smbserver_pane = updog_pane.split(direction=libtmux.pane.PaneDirection.Right)
-        smbserver_pane.send_keys("smbserver.py -smb2support a . -username mojo -password 'Password123!'")
-    else:
-        initial_pane.send_keys(f"sudo openvpn {vpn_file}")
+    openvpn_pane = initial_window.active_pane
+    if os.path.isfile(vpn_path):
+        openvpn_pane.send_keys(f"sudo openvpn {vpn_path}")
+    ligolo_pane = openvpn_pane.split(direction=libtmux.pane.PaneDirection.Below)
+    ligolo_pane.send_keys("mkdir -p ligolo; cd ligolo; proxy -selfcert")
+    updog_pane = ligolo_pane.split(direction=libtmux.pane.PaneDirection.Right)
+    updog_pane.send_keys("updog -p 8000 -d ~/staging")
+    smbserver_pane = updog_pane.split(direction=libtmux.pane.PaneDirection.Below)
+    smbserver_pane.send_keys("smbserver.py -smb2support a . -username mojo -password 'Password123!'")
     base_window = session.new_window(window_name=ip)
 
     # Initialize panes
@@ -147,7 +131,7 @@ def main():
         set_death_signal()
 
         # Establish connection with VPN and initialize the base window
-        if not exegol:
+        if os.path.isfile(vpn_path):
             verify_connection(ip)
             sleep(1)
         session.select_window(1)

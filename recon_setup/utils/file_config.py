@@ -22,16 +22,6 @@ def get_tun0_ip():
     except OSError:
         return None
 
-def write_exegol_configs():
-    tmux_conf_path = os.path.expanduser("~/.tmux.conf")
-    with open(tmux_conf_path, "r") as f:
-        data = f.read()
-    ip_pattern = r'\b((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}'
-    tun0_ip = get_tun0_ip() or "127.0.0.1"
-    new_data = re.sub(ip_pattern, tun0_ip, data)
-    with open(tmux_conf_path, "w") as f:
-        f.write(new_data)
-
 def populate_files(context):
     target = context.get_target()
     # Write context files

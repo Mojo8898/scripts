@@ -101,7 +101,7 @@ def main():
 
         # Lightweight TCP scan
         print_separator("Launching lightweight TCP scan...")
-        run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-sT", "-p", "21,22,23,25,53,80,88,110,111,135,137,139,143,389,443,445,636,993,995,1433,2049,3268,3269,3306,3389,5900,5985,8080", "--open", "-oN", lightweight_tcp_file, ip])
+        run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-sT", "-p", "21,22,23,25,53,80,88,110,111,135,137,138,139,143,389,443,445,464,636,993,995,1433,2049,3268,3269,3306,3389,5900,5985,8080", "--open", "-oN", lightweight_tcp_file, ip])
     else:
         if not was_scan_completed(targeted_tcp_file):
 

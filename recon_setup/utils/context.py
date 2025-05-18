@@ -4,7 +4,7 @@ import tempfile
 from dataclasses import dataclass, field
 from typing import Dict, Optional
 
-from utils.file_config import populate_files
+from utils.file_config import populate_files,add_creds
 from utils.hostfile import resolve_host
 from utils.logger import write_log
 from utils.spray import spray_passwd
@@ -56,6 +56,7 @@ class Context:
 
     def add_initial_cred(self, user: str, passwd: str = ""):
         """Add initial credential to creds file"""
+        add_creds(user, passwd)
         with open(self.creds_file, "a") as f:
             f.write(f"{user}:{passwd}\n")
         self.add_cred(user, passwd)

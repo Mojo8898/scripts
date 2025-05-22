@@ -5,7 +5,7 @@ from time import sleep
 from utils.logger import write_log
 from utils.smb import enumerate_smb_shares
 
-SPRAYABLE_PORTS = {21: "ftp", 22: "ssh", 111: "nfs", 135: "wmi", 389: "ldap", 445: "smb", 1433: "mssql", 3389: "rdp", 5900: "vnc", 5985: "winrm"}
+SPRAYABLE_PORTS = {21: "ftp", 22: "ssh", 135: "wmi", 389: "ldap", 445: "smb", 1433: "mssql", 3389: "rdp", 5900: "vnc", 5985: "winrm"}
 
 class PortHandlerRegistry:
     def __init__(self):
@@ -154,3 +154,7 @@ def smb_tasks(context):
                     run_task(context, f"nxc smb {context.ip} -u 'a' -p '' --spider '{share['name']}' --regex . --depth 2; nxc smb {context.ip} -u 'a' -p '' -M spider_plus -o DOWNLOAD_FLAG=True EXCLUDE_EXTS=ico,lnk,svg,js,css,scss,map,png,jpg,html,npmignore EXCLUDE_FILTER=ADMIN$,C$,Users,IPC$,NETLOGON,SYSVOL,bootstrap,lang OUTPUT_FOLDER=.; cat {context.ip}.json | jq '. | map_values(keys)'")
             if 'WRITE' in share['access']:
                 write_log(context.log_file, f"Found writeable share: {share['name']} ({', '.join(share['access'])} privileges)", "SUCCESS")
+
+@port_registry.register_port_handler(2049)
+def proto_tasks(context):
+    run_task(context, f"showmount -e {context.ip}")

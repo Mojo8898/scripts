@@ -38,8 +38,8 @@ def populate_files(context):
         "target": [target],
         "domain": [context.domain] or [],
         "domain_name": [context.domain] or [],
-        "user": "",
-        "file": ""
+        "user": [],
+        "file": []
     }
     arsenal_cfg = Path.home()/".arsenal.json"
     arsenal_cfg.write_text(json.dumps(arsenal_data))

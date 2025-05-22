@@ -32,12 +32,12 @@ def populate_files(context):
     # Write arsenal data
     tun0_ip = get_tun0_ip() or ""
     arsenal_data = {
-        "our_ip": tun0_ip,
-        "ip": context.ip,
-        "dc_ip": context.ip,
-        "target": target,
-        "domain": context.domain or "",
-        "domain_name": context.domain or "",
+        "lhost": [tun0_ip],
+        "ip": [context.ip],
+        "dc_ip": [context.ip],
+        "target": [target],
+        "domain": [context.domain] or [],
+        "domain_name": [context.domain] or [],
         "user": "",
         "file": ""
     }
@@ -88,6 +88,6 @@ def populate_files(context):
 def add_creds(user, passwd):
     cfg = Path.home()/".arsenal.json"
     data = json.loads(cfg.read_text())
-    data["user"] = user
-    data["passwd"] = passwd
+    data["user"] = [user]
+    data["passwd"] = [passwd]
     cfg.write_text(json.dumps(data))

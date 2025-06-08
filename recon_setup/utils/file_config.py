@@ -36,6 +36,7 @@ def populate_files(context):
         "ip": [context.ip],
         "dc_ip": [context.ip],
         "target": [target],
+        "fqdn": [target],
         "domain": [context.domain] or [],
         "domain_name": [context.domain] or [],
         "user": [],

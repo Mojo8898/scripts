@@ -95,10 +95,10 @@ def dns_tasks(context):
 def http_tasks(context):
     target = context.get_target()
     if target:
-        run_task(context, f"firefox 'http://{target}' &> /dev/null & disown; ffuf -w /usr/share/seclists/Discovery/DNS/services-names.txt -u http://{target} -H 'Host: FUZZ.{target}' -ac -c; ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://{target} -H 'Host: FUZZ.{target}' -ac -c; ffuf -w /usr/share/seclists/Discovery/Web-Content/quickhits.txt -u http://{target}/FUZZ -ac -c; ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -u http://{target}/FUZZ -ac -c; feroxbuster -u http://planning.htb")
+        run_task(context, f"firefox 'http://{target}' &> /dev/null & disown; ffuf -w /usr/share/seclists/Discovery/DNS/services-names.txt -u http://{target} -H 'Host: FUZZ.{target}' -ac -c; ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://{target} -H 'Host: FUZZ.{target}' -ac -c; ffuf -w /usr/share/seclists/Discovery/Web-Content/quickhits.txt -u http://{target}/FUZZ -ac -c; ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -u http://{target}/FUZZ -ac -c; feroxbuster -u http://{target}")
     else:
         target = context.ip
-        run_task(context, f"firefox 'http://{target}' &> /dev/null & disown; ffuf -w /usr/share/seclists/Discovery/Web-Content/quickhits.txt -u http://{target}/FUZZ -ac -c; ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -u http://{target}/FUZZ -ac -c; feroxbuster -u http://planning.htb")
+        run_task(context, f"firefox 'http://{target}' &> /dev/null & disown; ffuf -w /usr/share/seclists/Discovery/Web-Content/quickhits.txt -u http://{target}/FUZZ -ac -c; ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -u http://{target}/FUZZ -ac -c; feroxbuster -u http://{target}")
     run_task(context, f"wpscan --no-update --url http://{target} --detection-mode aggressive -e ap,u; wpscan --no-update --url http://{target} --detection-mode aggressive -e ap,u --plugins-detection aggressive -o wpscan_long.out")
 
 @port_registry.register_port_handler(88)
@@ -158,4 +158,4 @@ def smb_tasks(context):
 
 @port_registry.register_port_handler(2049)
 def proto_tasks(context):
-    run_task(context, f"showmount -e {context.ip}")
+    run_task(context, f"showmount -e {context.ip}; nxc nfs {context.ip} --enum-shares")

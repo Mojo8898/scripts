@@ -1,3 +1,4 @@
+import re
 import requests
 import subprocess
 import urllib3
@@ -60,48 +61,87 @@ def add_entry(log_file, entry):
         write_log(log_file, f"Failed to write to /etc/hosts with error: {str(e)}", "ERROR")
 
 def resolve_host(log_file, ip):
+    cmd = f"netexec ldap {ip}"
     try:
-        conn = SMBConnection(ip, ip, timeout=3)
+        result = subprocess.run(
+            cmd,
+            shell=True,
+            text=True,
+            check=True,
+            capture_output=True,
+            timeout=3
+        )
+    except subprocess.TimeoutExpired as e:
+        write_log(log_file, f"NetExec ldap timed out, attempting smb...", "WARN")
+        cmd = f"netexec smb {ip}"
         try:
-            conn.login("", "")
-            conn.logoff()
-        except:
-            pass
-        hostname = conn.getServerName()
-        domain = conn.getServerDNSDomainName()
-
+            result = subprocess.run(
+                cmd,
+                shell=True,
+                text=True,
+                check=True,
+                capture_output=True,
+                timeout=3
+            )
+        except subprocess.TimeoutExpired as e:
+            write_log(log_file, f"NetExec smb timed out, attempting http(s)...", "WARN")
+            for scheme in ['http', 'https']:
+                try:
+                    response = requests.get(
+                        f"{scheme}://{ip}",
+                        allow_redirects=False,
+                        timeout=2,
+                        verify=False
+                    )
+                    if response.is_redirect and 'location' in response.headers:
+                        fqdn = response.headers['location'].split('//')[-1].split('/')[0]
+                        fqdn_parts = fqdn.split('.')
+                        if len(fqdn.split('.')) > 2:
+                            vhost = fqdn
+                            domain = '.'.join(fqdn_parts[1:])
+                            entry = f"{ip}\t{fqdn} {domain}"
+                            write_log(log_file, f"Vhost discovered: {vhost}")
+                        else:
+                            vhost = None
+                            domain = fqdn
+                            entry = f"{ip}\t{domain}"
+                        add_entry(log_file, entry)
+                        return None, domain, vhost
+                    else:
+                        write_log(log_file, f"Missing \"location\" in HTTP response headers", "WARN")
+                except Exception as e:
+                    pass
+            write_log(log_file, "Failed to resolve hostname/domain", "WARN")
+            return None, None, None
+        except subprocess.CalledProcessError as e:
+            error_msg = e.stderr.strip() if e.stderr else 'Unknown error'
+            write_log(log_file, f"NetExec subprocess error: {error_msg}", "ERROR")
+        except Exception as e:
+            write_log(log_file, f"NetExec subprocess error: {str(e)}", "ERROR")
+        if result.returncode == 0:
+            hostname = re.search(r"\(name:([^)]+)\)", result.stdout).group(1)
+            domain = re.search(r"\(domain:([^)]+)\)", result.stdout).group(1)
+            if not domain or hostname == domain:
+                entry = f"{ip}\t{hostname}"
+            else:
+                entry = f"{ip}\t{hostname} {hostname}.{domain} {domain}"
+            add_entry(log_file, entry)
+            return hostname, domain, None
+        else:
+            write_log(log_file, f"NetExec smb subprocess returned non-zero code", "ERROR")
+    except subprocess.CalledProcessError as e:
+        error_msg = e.stderr.strip() if e.stderr else 'Unknown error'
+        write_log(log_file, f"NetExec subprocess error: {error_msg}", "ERROR")
+    except Exception as e:
+        write_log(log_file, f"NetExec subprocess error: {str(e)}", "ERROR")
+    if result.returncode == 0:
+        hostname = re.search(r"\(name:([^)]+)\)", result.stdout).group(1)
+        domain = re.search(r"\(domain:([^)]+)\)", result.stdout).group(1)
         if not domain or hostname == domain:
             entry = f"{ip}\t{hostname}"
         else:
             entry = f"{ip}\t{hostname} {hostname}.{domain} {domain}"
         add_entry(log_file, entry)
         return hostname, domain, None
-    except Exception as e:
-        for scheme in ['http', 'https']:
-            try:
-                response = requests.get(
-                    f"{scheme}://{ip}",
-                    allow_redirects=False,
-                    timeout=2,
-                    verify=False
-                )
-                if response.is_redirect and 'location' in response.headers:
-                    fqdn = response.headers['location'].split('//')[-1].split('/')[0]
-                    fqdn_parts = fqdn.split('.')
-                    if len(fqdn.split('.')) > 2:
-                        vhost = fqdn
-                        domain = '.'.join(fqdn_parts[1:])
-                        entry = f"{ip}\t{fqdn} {domain}"
-                        write_log(log_file, f"Vhost discovered: {vhost}")
-                    else:
-                        vhost = None
-                        domain = fqdn
-                        entry = f"{ip}\t{domain}"
-                    add_entry(log_file, entry)
-                    return None, domain, vhost
-                else:
-                    write_log(log_file, f"Missing \"location\" in HTTP response headers", "WARN")
-            except Exception as e:
-                pass
-        write_log(log_file, "Failed to resolve hostname/domain", "WARN")
-        return None, None, None
+    else:
+        write_log(log_file, f"NetExec ldap subprocess returned non-zero code", "ERROR")

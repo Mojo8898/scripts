@@ -134,14 +134,15 @@ def resolve_host(log_file, ip):
         write_log(log_file, f"NetExec subprocess error: {error_msg}", "ERROR")
     except Exception as e:
         write_log(log_file, f"NetExec subprocess error: {str(e)}", "ERROR")
-    if result.returncode == 0:
-        hostname = re.search(r"\(name:([^)]+)\)", result.stdout).group(1)
-        domain = re.search(r"\(domain:([^)]+)\)", result.stdout).group(1)
-        if not domain or hostname == domain:
-            entry = f"{ip}\t{hostname}"
-        else:
-            entry = f"{ip}\t{hostname} {hostname}.{domain} {domain}"
-        add_entry(log_file, entry)
-        return hostname, domain, None
-    else:
+    # if result.returncode == 0:
+    #     hostname = re.search(r"\(name:([^)]+)\)", result.stdout).group(1)
+    #     domain = re.search(r"\(domain:([^)]+)\)", result.stdout).group(1)
+    #     if not domain or hostname == domain:
+    #         entry = f"{ip}\t{hostname}"
+    #     else:
+    #         entry = f"{ip}\t{hostname} {hostname}.{domain} {domain}"
+    #     add_entry(log_file, entry)
+    #     return hostname, domain, None
+    if result.returncode == 1:
         write_log(log_file, f"NetExec ldap subprocess returned non-zero code", "ERROR")
+    return None, None, None

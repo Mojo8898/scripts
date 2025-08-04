@@ -112,7 +112,7 @@ def resolve_host(log_file, ip):
                     else:
                         write_log(log_file, f"Missing \"location\" in HTTP response headers", "WARN")
                 except Exception as e:
-                    write_log(log_file, f"Requests subprocess error: {str(e)}", "ERROR")
+                    pass
             write_log(log_file, "Failed to resolve hostname/domain", "WARN")
             return None, None, None
         else:

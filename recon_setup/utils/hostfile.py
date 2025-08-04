@@ -2,7 +2,6 @@ import re
 import requests
 import subprocess
 import urllib3
-from impacket.smbconnection import SMBConnection
 
 from utils.logger import write_log
 

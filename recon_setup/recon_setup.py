@@ -140,9 +140,13 @@ def main():
         # Initialize automation if argument is provided
         if automate:
             os.makedirs(log_dir, exist_ok=True)
-            for file in [tmux_pipe_file, log_file, debug_file, users_file, creds_file]:
+            for file in [tmux_pipe_file, debug_file, users_file, creds_file]:
                 if os.path.isfile(file):
                     os.remove(file)
+
+            # Clear log file while also making sure it exists
+            with open(log_file, 'w'):
+                pass
 
             # Initialize stdio depending on debug flag
             with open(os.devnull, "wb") as null:

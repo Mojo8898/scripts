@@ -61,7 +61,7 @@ def add_entry(log_file, entry):
         write_log(log_file, f"Failed to write to /etc/hosts with error: {str(e)}", "ERROR")
 
 def resolve_host(log_file, ip):
-    cmd = f"netexec ldap {ip}"
+    cmd = f"nxc ldap {ip}"
     try:
         result = subprocess.run(
             cmd,
@@ -69,11 +69,12 @@ def resolve_host(log_file, ip):
             text=True,
             check=True,
             capture_output=True,
-            timeout=3
+            timeout=2
         )
-    except subprocess.TimeoutExpired as e:
-        write_log(log_file, f"NetExec ldap timed out, attempting smb...", "WARN")
-        cmd = f"netexec smb {ip}"
+    except Exception as e:
+        write_log(log_file, f"NetExec ldap subprocess error: {str(e)}", "ERROR")
+    if not result.stdout.strip():
+        cmd = f"nxc smb {ip}"
         try:
             result = subprocess.run(
                 cmd,
@@ -81,10 +82,11 @@ def resolve_host(log_file, ip):
                 text=True,
                 check=True,
                 capture_output=True,
-                timeout=3
+                timeout=2
             )
-        except subprocess.TimeoutExpired as e:
-            write_log(log_file, f"NetExec smb timed out, attempting http(s)...", "WARN")
+        except Exception as e:
+            write_log(log_file, f"NetExec smb subprocess error: {str(e)}", "ERROR")
+        if not result.stdout.strip():
             for scheme in ['http', 'https']:
                 try:
                     response = requests.get(
@@ -106,19 +108,15 @@ def resolve_host(log_file, ip):
                             domain = fqdn
                             entry = f"{ip}\t{domain}"
                         add_entry(log_file, entry)
+                        write_log(log_file, f"Adding entry to hosts: {entry}")
                         return None, domain, vhost
                     else:
                         write_log(log_file, f"Missing \"location\" in HTTP response headers", "WARN")
                 except Exception as e:
-                    pass
+                    write_log(log_file, f"Requests subprocess error: {str(e)}", "ERROR")
             write_log(log_file, "Failed to resolve hostname/domain", "WARN")
             return None, None, None
-        except subprocess.CalledProcessError as e:
-            error_msg = e.stderr.strip() if e.stderr else 'Unknown error'
-            write_log(log_file, f"NetExec subprocess error: {error_msg}", "ERROR")
-        except Exception as e:
-            write_log(log_file, f"NetExec subprocess error: {str(e)}", "ERROR")
-        if result.returncode == 0:
+        else:
             hostname = re.search(r"\(name:([^)]+)\)", result.stdout).group(1)
             domain = re.search(r"\(domain:([^)]+)\)", result.stdout).group(1)
             if not domain or hostname == domain:
@@ -127,22 +125,12 @@ def resolve_host(log_file, ip):
                 entry = f"{ip}\t{hostname} {hostname}.{domain} {domain}"
             add_entry(log_file, entry)
             return hostname, domain, None
+    else:
+        hostname = re.search(r"\(name:([^)]+)\)", result.stdout).group(1)
+        domain = re.search(r"\(domain:([^)]+)\)", result.stdout).group(1)
+        if not domain or hostname == domain:
+            entry = f"{ip}\t{hostname}"
         else:
-            write_log(log_file, f"NetExec smb subprocess returned non-zero code", "ERROR")
-    except subprocess.CalledProcessError as e:
-        error_msg = e.stderr.strip() if e.stderr else 'Unknown error'
-        write_log(log_file, f"NetExec subprocess error: {error_msg}", "ERROR")
-    except Exception as e:
-        write_log(log_file, f"NetExec subprocess error: {str(e)}", "ERROR")
-    # if result.returncode == 0:
-    #     hostname = re.search(r"\(name:([^)]+)\)", result.stdout).group(1)
-    #     domain = re.search(r"\(domain:([^)]+)\)", result.stdout).group(1)
-    #     if not domain or hostname == domain:
-    #         entry = f"{ip}\t{hostname}"
-    #     else:
-    #         entry = f"{ip}\t{hostname} {hostname}.{domain} {domain}"
-    #     add_entry(log_file, entry)
-    #     return hostname, domain, None
-    if result.returncode == 1:
-        write_log(log_file, f"NetExec ldap subprocess returned non-zero code", "ERROR")
-    return None, None, None
+            entry = f"{ip}\t{hostname} {hostname}.{domain} {domain}"
+        add_entry(log_file, entry)
+        return hostname, domain, None

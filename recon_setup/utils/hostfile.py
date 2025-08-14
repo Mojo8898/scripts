@@ -66,26 +66,28 @@ def resolve_host(log_file, ip):
             cmd,
             shell=True,
             text=True,
-            check=True,
             capture_output=True,
             timeout=2
         )
+        stdout = result.stdout
     except Exception as e:
+        stdout = None
         write_log(log_file, f"NetExec ldap subprocess error: {str(e)}", "ERROR")
-    if not result.stdout.strip():
+    if not (stdout or '').strip():
         cmd = f"nxc smb {ip}"
         try:
             result = subprocess.run(
                 cmd,
                 shell=True,
                 text=True,
-                check=True,
                 capture_output=True,
                 timeout=2
             )
+            stdout = result.stdout
         except Exception as e:
+            stdout = None
             write_log(log_file, f"NetExec smb subprocess error: {str(e)}", "ERROR")
-        if not result.stdout.strip():
+        if not (stdout or '').strip():
             for scheme in ['http', 'https']:
                 try:
                     response = requests.get(

@@ -31,6 +31,8 @@ def populate_files(context):
     open(context.creds_file, 'a').close()
     # Write arsenal data
     tun0_ip = get_tun0_ip() or ""
+    if tun0_ip:
+        write_log(context.log_file, f"tun0 IP: {tun0_ip}", "INFO")
     arsenal_data = {
         "lhost": [tun0_ip],
         "ip": [context.ip],

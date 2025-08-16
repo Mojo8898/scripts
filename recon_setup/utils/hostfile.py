@@ -111,8 +111,6 @@ def resolve_host(log_file, ip):
                         add_entry(log_file, entry)
                         write_log(log_file, f"Adding entry to hosts: {entry}")
                         return None, domain, vhost
-                    else:
-                        write_log(log_file, f"Missing \"location\" in HTTP response headers", "WARN")
                 except Exception as e:
                     pass
             write_log(log_file, "Failed to resolve hostname/domain", "WARN")

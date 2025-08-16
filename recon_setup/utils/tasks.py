@@ -1,4 +1,4 @@
-from impacket.ldap.ldap import LDAPConnection, Scope
+from impacket.ldap.ldap import LDAPConnection
 import libtmux
 from time import sleep
 
@@ -89,7 +89,7 @@ def proto_tasks(context):
 
 @port_registry.register_port_handler(53)
 def dns_tasks(context):
-    run_task(context, f"dig axfr @{context.ip} {context.domain}")
+    run_task(context, f"dig @{context.ip} -x {context.ip} +short; dig axfr @{context.ip} {context.domain}")
 
 @port_registry.register_port_handler(80)
 def http_tasks(context):

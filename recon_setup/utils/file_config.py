@@ -1,4 +1,3 @@
-import os
 import fcntl
 import json
 import socket
@@ -33,19 +32,16 @@ def populate_files(context):
     tun0_ip = get_tun0_ip() or ""
     if tun0_ip:
         write_log(context.log_file, f"tun0 IP: {tun0_ip}", "INFO")
-    arsenal_data = {
+    aliasr_data = {
         "lhost": [tun0_ip],
         "ip": [context.ip],
         "dc_ip": [context.ip],
         "target": [target],
         "fqdn": [target],
         "domain": [context.domain] or [],
-        "domain_name": [context.domain] or [],
-        "user": [],
-        "file": []
     }
-    arsenal_cfg = Path.home()/".arsenal.json"
-    arsenal_cfg.write_text(json.dumps(arsenal_data))
+    aliasr_cfg = Path.home()/".aliasr.json"
+    aliasr_cfg.write_text(json.dumps(aliasr_data))
     # Write /etc/krb5.conf if a domain is detected
     if context.domain:
         default_realm = context.domain.upper()
@@ -89,7 +85,7 @@ def populate_files(context):
             write_log(context.log_file, f"Failed to write to /etc/krb5.conf with error: {str(e)}", "ERROR")
 
 def add_creds(user, passwd):
-    cfg = Path.home()/".arsenal.json"
+    cfg = Path.home()/".aliasr.json"
     data = json.loads(cfg.read_text())
     data["user"] = [user]
     data["passwd"] = [passwd]

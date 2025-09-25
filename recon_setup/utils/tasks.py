@@ -3,7 +3,7 @@ from time import sleep
 import libtmux
 
 from utils.logger import write_log
-from recon_setup.utils.active_directory import enum_smb_shares, anonymous_bind
+from utils.active_directory import enum_smb_shares, anonymous_bind
 
 
 SPRAYABLE_PORTS = {21: "ftp", 22: "ssh", 135: "wmi", 389: "ldap", 445: "smb", 1433: "mssql", 3389: "rdp", 5900: "vnc", 5985: "winrm"}

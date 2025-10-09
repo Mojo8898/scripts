@@ -81,7 +81,7 @@ def resolve_host(log_file, ip):
                 shell=True,
                 text=True,
                 capture_output=True,
-                timeout=2
+                timeout=4
             )
             stdout = result.stdout
         except Exception as e:
@@ -93,7 +93,7 @@ def resolve_host(log_file, ip):
                     response = requests.get(
                         f"{scheme}://{ip}",
                         allow_redirects=False,
-                        timeout=2,
+                        timeout=4,
                         verify=False
                     )
                     if response.is_redirect and 'location' in response.headers:

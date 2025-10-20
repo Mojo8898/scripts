@@ -174,6 +174,15 @@ def smb_tasks(context):
                 write_log(context.log_file, f"Found writeable share: {share['name']} ({', '.join(share['access'])} privileges)", "SUCCESS")
 
 
+@port_registry.register_port_handler(1433)
+def proto_tasks(context):
+    if context.creds_exist():
+        user, passwd = context.get_initial_cred()
+        run_task(context, f"nxc mssql {context.ip} -u {user} -p '{passwd}' -M enum_impersonate -M enum_links -M enum_logins; nxc mssql {context.ip} -u {user} -p '{passwd}' --local-auth -M enum_impersonate -M enum_links -M enum_logins; nxc mssql {context.ip} -u {user} -p '{passwd}' -d . -M enum_impersonate -M enum_links -M enum_logins")
+        run_task(context, f"mssqlclient.py {context.domain}/{user}:'{passwd}'@{context.ip}")
+        run_task(context, f"mssqlclient.py {context.domain}/{user}:'{passwd}'@{context.ip} -windows-auth")
+
+
 @port_registry.register_port_handler(2049)
 def proto_tasks(context):
     run_task(context, f"showmount -e {context.ip}; nxc nfs {context.ip} --enum-shares")

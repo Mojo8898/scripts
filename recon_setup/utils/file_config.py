@@ -53,11 +53,3 @@ def populate_files(context):
             write_log(context.log_file, f"Failed to write to /etc/krb5.conf with error: {error_msg}", "ERROR")
         except Exception as e:
             write_log(context.log_file, f"Failed to write to /etc/krb5.conf with error: {str(e)}", "ERROR")
-
-
-def add_creds(user, passwd):
-    cfg = Path.home()/".aliasr.json"
-    data = json.loads(cfg.read_text())
-    data["user"] = [user]
-    data["passwd"] = [passwd]
-    cfg.write_text(json.dumps(data))

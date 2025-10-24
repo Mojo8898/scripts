@@ -11,7 +11,10 @@ _NEGATIVE = re.compile(r"\[\-\]")
 
 def anonymous_bind(context) -> bool:
     cmd = ["nxc", "ldap", context.ip, "-u", "", "-p", ""]
-    p = subprocess.run(cmd, capture_output=True, text=True, timeout=5, check=False)
+    try:
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=5, check=False)
+    except Exception as e:
+        write_log(context.log_file, f"NetExec ldap subprocess error: {str(e)}", "ERROR")
     out = p.stdout or ""
     if _NEGATIVE.search(out):
         return False

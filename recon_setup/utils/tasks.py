@@ -171,8 +171,6 @@ def smb_tasks(context):
                     run_task(context, f"nxc smb {context.ip} -u '' -p '' --spider '{share['name']}' --regex . --depth 2")
                 elif method == 'guest':
                     run_task(context, f"nxc smb {context.ip} -u 'a' -p '' --spider '{share['name']}' --regex . --depth 2")
-            if 'WRITE' in share['access']:
-                write_log(context.log_file, f"Found writeable share: {share['name']} ({', '.join(share['access'])} privileges)", "SUCCESS")
         if method == 'user/pass':
             run_task(context, f"faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc smb {context.ip} -u {user} -p '{passwd}' -k -M spider_plus -o DOWNLOAD_FLAG=True EXCLUDE_EXTS=ico,lnk,svg,js,css,scss,map,png,jpg,html,npmignore EXCLUDE_FILTER=ADMIN$,C$,Users,IPC$,NETLOGON,SYSVOL,bootstrap,lang OUTPUT_FOLDER=.; cat {context.ip}.json | jq '. | map_values(keys)'; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" smbclientng --host {target} -d {context.domain} -u {user} -p '{passwd}' -k -C shares")
         elif method == 'null':

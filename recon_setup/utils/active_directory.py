@@ -25,6 +25,7 @@ def anonymous_bind(context) -> bool:
 def enum_smb_shares(context) -> list:
     """Enumerates SMB shares and their access permissions."""
     shares_info = []
+    method = None
     if context.creds_exist():
         try:
             conn = SMBConnection(context.ip, context.ip)
@@ -73,5 +74,8 @@ def enum_smb_shares(context) -> list:
                 "remark": share_remark,
                 "access": access
             })
-    conn.logoff()
+    try:
+        conn.logoff()
+    except Exception:
+        pass
     return shares_info, method

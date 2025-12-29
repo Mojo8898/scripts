@@ -60,7 +60,7 @@ def add_entry(log_file, entry):
         write_log(log_file, f"Failed to write to /etc/hosts with error: {str(e)}", "ERROR")
 
 def resolve_host(log_file, ip):
-    cmd = f"nxc ldap {ip}"
+    cmd = f"nxc ldap {ip} --dns-server {ip}"
     try:
         result = subprocess.run(
             cmd,
@@ -74,7 +74,7 @@ def resolve_host(log_file, ip):
         stdout = None
         write_log(log_file, f"NetExec ldap subprocess error: {str(e)}", "ERROR")
     if not (stdout or '').strip():
-        cmd = f"nxc smb {ip}"
+        cmd = f"nxc smb {ip} --dns-server {ip}"
         try:
             result = subprocess.run(
                 cmd,

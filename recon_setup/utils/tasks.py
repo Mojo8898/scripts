@@ -62,7 +62,7 @@ def prepare_task_pane(context):
             attach=False
         )
         # Split into 6 panes (5 splits)
-        pane = new_window.attached_pane
+        pane = new_window.active_pane
         for _ in range(2):
             pane = pane.split()
             pane = pane.split(direction=libtmux.pane.PaneDirection.Right)

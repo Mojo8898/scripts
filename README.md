@@ -2,8 +2,6 @@
 
 Here are a collection of scripts I use regularly for offensive security-related tasks.
 
-![](img/recon_setup_demo.gif)
-
 ## Install
 
 ```bash
@@ -15,10 +13,9 @@ sudo git clone https://github.com/Mojo8898/scripts.git /opt/scripts
 cd /opt/scripts
 
 # Set standalone scripts as to be executable
-sudo chmod +x recon_setup/recon_setup.py cradle_gen.py scan_machine.py scan_targets.py
+sudo chmod +x bh-upload.py cradle_gen.py scan_machine.py scan_targets.py
 
-# Create symbolic links to add standalone scripts to $PATH (pipx compatibility coming soon?)
-sudo ln -s /opt/scripts/recon_setup/recon_setup.py /usr/local/bin/recon_setup.py
+sudo ln -s /opt/scripts/bh-upload.py /usr/local/bin/bh-upload.py
 sudo ln -s /opt/scripts/scan_machine.py /usr/local/bin/scan_machine.py
 sudo ln -s /opt/scripts/scan_targets.py /usr/local/bin/scan_targets.py
 sudo ln -s /opt/scripts/cradle_gen.py /usr/local/bin/cradle_gen.py

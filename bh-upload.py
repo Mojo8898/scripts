@@ -56,6 +56,12 @@ def vlog(*args, **kwargs):
 
 # ── API helpers ────────────────────────────────────────────────────────────────
 
+def has_upload_jobs(creds: dict) -> bool:
+    """Return True if any upload jobs exist."""
+    jobs = query_bloodhound_api("/api/v2/file-upload", "GET", creds)
+    return bool(jobs.get("data"))
+
+
 def query_bloodhound_api(uri: str, method: str, creds: dict,
                          body_file_name: str = "", body_json: dict = None) -> dict:
     digester = hmac.new(creds["token_key"].encode(), digestmod=hashlib.sha256)
@@ -299,19 +305,22 @@ def main():
     upload_requested = bool(args.dir or args.zipfile)
 
     if args.clear:
-        try:
-            clear_time = datetime.now(timezone.utc)
-            clear_database(creds)
-        except Exception as e:
-            print(f"[!] Error clearing database: {e}")
-            sys.exit(1)
-
-        if upload_requested:
+        if not has_upload_jobs(creds):
+            log.info("No existing upload jobs found — skipping clear and readiness wait.")
+        else:
             try:
-                wait_for_ready(since=clear_time)
+                clear_time = datetime.now(timezone.utc)
+                clear_database(creds)
             except Exception as e:
-                print(f"[!] {e}")
+                print(f"[!] Error clearing database: {e}")
                 sys.exit(1)
+
+            if upload_requested:
+                try:
+                    wait_for_ready(since=clear_time)
+                except Exception as e:
+                    print(f"[!] {e}")
+                    sys.exit(1)
 
     if upload_requested:
         files = collect_zip(Path(args.zipfile)) if args.zipfile else collect_files_from_dir(Path(args.dir))

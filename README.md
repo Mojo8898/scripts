@@ -13,9 +13,8 @@ sudo git clone https://github.com/Mojo8898/scripts.git /opt/scripts
 cd /opt/scripts
 
 # Set standalone scripts as to be executable
-sudo chmod +x bh-upload.py cradle_gen.py scan_machine.py scan_targets.py
+sudo chmod +x cradle_gen.py scan_machine.py scan_targets.py
 
-sudo ln -s /opt/scripts/bh-upload.py /usr/local/bin/bh-upload.py
 sudo ln -s /opt/scripts/scan_machine.py /usr/local/bin/scan_machine.py
 sudo ln -s /opt/scripts/scan_targets.py /usr/local/bin/scan_targets.py
 sudo ln -s /opt/scripts/cradle_gen.py /usr/local/bin/cradle_gen.py
